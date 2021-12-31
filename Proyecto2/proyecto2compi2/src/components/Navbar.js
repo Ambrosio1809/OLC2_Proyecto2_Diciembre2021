@@ -11,7 +11,8 @@ const NavegacionInit =() =>{
                 <Navbar.Collapse id="basic-navbar-nav">
                     <Nav className="mr-auto">
                         <Nav.Link href="/carga">Carga de Archivo</Nav.Link>
-                        <Nav.Link href="/parametros">Parametrización</Nav.Link>                                       
+                        <Nav.Link href="/parametros">Parametrización</Nav.Link>
+                        <Nav.Link href="/Seleccion">Reportes</Nav.Link>                                       
                     </Nav>                    
                 </Navbar.Collapse>
             </Navbar>

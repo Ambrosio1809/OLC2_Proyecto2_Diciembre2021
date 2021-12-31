@@ -3,8 +3,6 @@ import NavegacionInit from './Navbar';
 
 function CargaMasiva (){
 
-    
-
     const [archivos, setArchivos]=useState(null);
 
     const subirArchivos=e=>{
@@ -18,6 +16,7 @@ function CargaMasiva (){
             f.append("files", archivos[index]);            
         }
         try{
+            console.log(f)
             let config ={
                 method: 'POST',
                 headers:{ },
@@ -25,9 +24,9 @@ function CargaMasiva (){
                 
             }
             await fetch('http://localhost:4000/CargarArchivo',config)
-            .then(response=>{
-                console.log(response.data);
-            }).catch(error=>{
+            .then(response=>response.json())
+            .then(data => console.log(data.message))
+            .catch(error=>{
                 console.log(error)
             })
 

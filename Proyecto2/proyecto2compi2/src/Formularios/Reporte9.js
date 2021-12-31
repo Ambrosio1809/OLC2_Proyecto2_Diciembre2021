@@ -3,7 +3,7 @@ import { Form, Button } from 'react-bootstrap';
 import NavegacionInit from "../components/Navbar";
 import '../components/Design.css'
 
-class Reporte1 extends React.Component {
+class Reporte9 extends React.Component {
     state = {
         form: {
             Variable1: '',
@@ -36,7 +36,7 @@ class Reporte1 extends React.Component {
                 body: JSON.stringify(this.state.form)
 
             }
-            let res = await fetch('http://localhost:4000/Reporte1', config)
+            let res = await fetch('http://localhost:4000/Reporte9', config)
             let json = await res.json()
             console.log(json)
 
@@ -51,26 +51,26 @@ class Reporte1 extends React.Component {
             <div>
                 <NavegacionInit />
                 <div className="main-container col-12">
-                    <h1>Parametros Reporte No.1</h1>
+                    <h1>Parametros Reporte No.9</h1>
                     <Form onSubmit={this.handleSubmit}>
                         <Form.Group controlId="formUsename">
-                            <Form.Label>Ingrese el País</Form.Label>
-                            <Form.Control type="text" name="Variable1" placeholder="Nombre_País" onChange={this.handleChange} value={this.state.form.Variable1} />
+                            <Form.Label>Ingrese el Pais que desea</Form.Label>
+                            <Form.Control type="text" name="Variable1" placeholder="Nombre_Pais" onChange={this.handleChange} value={this.state.form.Variable1} />
                         </Form.Group>
                         <Form.Group controlId="formUsename">
-                            <Form.Label>Ingrese Nombre Columna Para Pais</Form.Label>
-                            <Form.Control type="text" name="Variable2" placeholder="Columna_pais" onChange={this.handleChange} value={this.state.form.Variable2} />
+                            <Form.Label>Ingrese Nombre Columna Para obtener Pais</Form.Label>
+                            <Form.Control type="text" name="Variable2" placeholder="Columna_Pais" onChange={this.handleChange} value={this.state.form.Variable2} />
+                        </Form.Group>
+                        <Form.Group controlId="formUsename">
+                            <Form.Label>Ingrese Nombre Columna Para obtener Vacunacion</Form.Label>
+                            <Form.Control type="text" name="Variable3" placeholder="Columna_Vacunacion" onChange={this.handleChange} value={this.state.form.Variable3} />
                         </Form.Group>
                         <Form.Group controlId="formUsename">
                             <Form.Label>Ingrese Nombre Columna Para Fecha</Form.Label>
-                            <Form.Control type="text" name="Variable3" placeholder="Columna_fecha" onChange={this.handleChange} value={this.state.form.Variable3} />
-                        </Form.Group>
-                        <Form.Group controlId="formUsename">
-                            <Form.Label>Ingrese Nombre Columna Para Casos Confirmados</Form.Label>
-                            <Form.Control type="text" name="Variable4" placeholder="Columna_confirmados" onChange={this.handleChange} value={this.state.form.Variable4} />
+                            <Form.Control type="text" name="Variable4" placeholder="Columna_Fechas" onChange={this.handleChange} value={this.state.form.Variable4} />
                         </Form.Group>
                         <Button variant="primary" type="submit" onSubmit={this.handleSubmit}>
-                            Visualizar
+                            Parametrizar
                         </Button>
                     </Form>
                 </div>
@@ -79,4 +79,4 @@ class Reporte1 extends React.Component {
     }
 }
 
-export default Reporte1;
+export default Reporte9;
