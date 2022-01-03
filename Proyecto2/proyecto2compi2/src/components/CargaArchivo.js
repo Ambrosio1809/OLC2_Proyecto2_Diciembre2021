@@ -43,7 +43,7 @@ function CargaMasiva (){
                     <h1>
                         CargaMasiva
                     </h1>
-                    <input type="file" name ="files" multiple onChange={(e)=>subirArchivos(e.target.files)}/>
+                    <input type="file" name ="files" accept=".csv,.xls,.xlsx,.json" onChange={(e)=>subirArchivos(e.target.files)}/>
                     <button className="btn btn-primary" onClick={()=>insertarArchivos()}>Cargar Archivo</button>
 
 
