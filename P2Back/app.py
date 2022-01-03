@@ -52,14 +52,24 @@ def addProduct():
 
 @app.route('/GetReporte1', methods=['GET'])
 def getReporte1():
+
+    if R1_Coeficiente[3] > 0:
+        Conclusion = 'Debido a que la grafica muestra una pendiente positiva, nos indica que \n la tendencia de la infección del Covid-19 aumentara conforme pase el tiempo'
+    else:
+        Conclusion = 'Debido a que la grafica muestra una pendiente negativa, esto nos indica que \n la tendencia de la infección del Covid-19 disminuira conforme pase el tiempo'
+
     with open ("Reporte1.png","rb") as imagen:
         cadenaBase64 = base64.b64encode(imagen.read())
-    return jsonify({"imagen":cadenaBase64.decode('utf-8'),"pais":R1_pais})
-
+    return jsonify({"imagen":cadenaBase64.decode('utf-8'),
+                    "pais":R1_pais,
+                    "grado": R1_Grado_Polinomio, 
+                    "RMSE":R1_rmse,
+                    "R2": R1_r2,
+                    "conclusion":Conclusion})
 
 @app.route('/Reporte1', methods = ['POST'])
 def Reporte1():
-    global R1_pais, R1_Col_Pais, R1_Col_Fecha, R1_Col_Confirmados, R1_Grado_Polinomio, R1_rmse, R1_r2
+    global R1_pais, R1_Col_Pais, R1_Col_Fecha, R1_Col_Confirmados, R1_Grado_Polinomio, R1_rmse, R1_r2, R1_Coeficiente
     VariablesParam = {
         "Variable1":request.json['Variable1'],
         "Variable2":request.json['Variable2'],
@@ -89,6 +99,8 @@ def Reporte1():
         nueva_y = modelo.predict(Transform_x)
 
         R1_rmse = np.sqrt(mean_squared_error(Y,nueva_y))
+        R1_Coeficiente = modelo.coef_[0]
+        print(R1_Coeficiente)
         R1_r2 = r2_score(Y,nueva_y)
         print('RMSE: ', R1_rmse)
         print('R2: ', R1_r2)
@@ -98,6 +110,7 @@ def Reporte1():
         Titulo = 'Grado = {}; RMSE = {}; R2 = {}'.format(R1_Grado_Polinomio, round(R1_rmse,2), round(R1_r2,2))
         plt.title("Tendencia de la Infeccion por Covid-19 en un país\n " + Titulo, fontsize=10)
         plt.savefig("Reporte1.png")
+        plt.close()
     else:
         Datos = dataset.loc[dataset[R1_Col_Pais]==R1_pais]
         Datos = pd.DataFrame(Datos)
@@ -117,22 +130,40 @@ def Reporte1():
         nueva_y = modelo.predict(Transform_x)
 
         R1_rmse = np.sqrt(mean_squared_error(Y,nueva_y))
+        R1_Coeficiente = modelo.coef_[0]
         R1_r2 = r2_score(Y,nueva_y)
-        print('RMSE: ', R1_rmse)
-        print('R2: ', R1_r2)
 
         plt.plot(Ejex, Y, color='coral', linewidth=3)
         plt.grid()
         Titulo = 'Grado = {}; RMSE = {}; R2 = {}'.format(R1_Grado_Polinomio, round(R1_rmse,2), round(R1_r2,2))
         plt.title("Tendencia de la Infeccion por Covid-19 en un país\n " + Titulo, fontsize=10)
         plt.savefig("Reporte1.png")
+        plt.close()
 
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
+@app.route('/GetReporte2', methods=['GET'])
+def getReporte2():
+    if R2_r2 > 0.75:
+        Conclusion = 'Debido a que nuestro coeficiente de correlacion parece estar en un valor\n cercano a 1, podemos indicar que los datos y nuestra predicción se ajustan relativamente \nexactos a la prediccion realizada'
+    else:
+        Conclusion = 'Debido a que nuestro coeficiente de correlacion parece no estar en un valor\n cercano a 1, podemos indicar que los datos y nuestra predicción no se ajustan \ncorrectamente a la prediccion realizada'
+
+    with open ("Reporte2.png","rb") as imagen:
+        cadenaBase64 = base64.b64encode(imagen.read())
+    return jsonify({"imagen":cadenaBase64.decode('utf-8'),
+                    "pais":R2_pais,
+                    "grado": R2_Grado_Polinomio, 
+                    "RMSE":round(R2_rmse,4),
+                    "R2": round(R2_r2,4),
+                    "Dias":R2_prediccion,
+                    "Prediccion":round(R2_pred,4),
+                    "Conclusion":Conclusion})
+
 @app.route('/Reporte2', methods = ['POST'])
 def Reporte2():
-    global R2_pais, R2_Col_pais, R2_Col_Infectados, R2_Col_Dias, R2_prediccion
+    global R2_pais, R2_Col_pais, R2_Col_Infectados, R2_Col_Dias, R2_prediccion,R2_Grado_Polinomio, R2_rmse, R2_r2, R2_pred, R2_Coeficiente
     VariablesParamR2 = {
         "Variable1":request.json['Variable1'],
         "Variable2":request.json['Variable2'],
@@ -170,9 +201,8 @@ def Reporte2():
     nueva_y = modelo.predict(Transform_x)
     
     R2_rmse = np.sqrt(mean_squared_error(Ejey,nueva_y))
+    R2_Coeficiente = modelo.coef_
     R2_r2 = r2_score(Ejey,nueva_y)
-    print('RMSE: ', R2_rmse)
-    print('R2: ', R2_r2)
     
     x_nuevo_min = 0.0
     x_nuevo_max = R2_prediccion
@@ -183,22 +213,107 @@ def Reporte2():
     x_nuevo_transormado = Caracteristicas_Polinomio.fit_transform(x_nuevo)
     y_nueva = modelo.predict(x_nuevo_transormado)
 
+    obtenerUltimo = np.size(y_nueva)
+
+    R2_pred = y_nueva[obtenerUltimo-1]
+
     plt.plot(x_nuevo,y_nueva, color ='coral', linewidth = 3)
     plt.grid()
 
-    Titulo = 'Grado = {}; RMSE = {}; R2 = {}'.format(R2_Grado_Polinomio, round(R2_rmse,2), round(R2_r2,2))
+    Titulo = 'Grado = {}; RMSE = {}; R2 = {} \n para {} dias la prediccion es: {}'.format(R2_Grado_Polinomio, round(R2_rmse,2), round(R2_r2,2),R2_prediccion,round(R2_pred,2))
     plt.title("Prediccion de Infectados en un país\n " + Titulo, fontsize=10)
-    plt.xlabel('x')
-    plt.ylabel('y')
+    plt.xlabel('Días')
+    plt.ylabel('Infectados')
     plt.savefig("Reporte2.png")
-    plt.show()
+    plt.close()
 
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
+@app.route('/GetReporte3', methods=['GET'])
+def getReporte3():
+    if R3_m[0] > 1:
+        conclusion = 'Dado a que la pendiente de nuestra ecuacion mayor a 1, podemos concluir \nque nuestro indice crecera demasiado rapido conforme al tiempo pase, por lo cual\n la pandemia sera un riesgo mas grande para el mundo'
+    elif R3_m[0]< 1 or R3_m[0] > 0 :
+        conclusion = 'Dado a que la pendiente se encuentra en un valor entre 0 y 1, nos indica que\n el indice seguira creciendo pero a un nivel mas constante, no tan rapido\n como si lo fuese mayor a 1'
+    elif R3_m[0] < 0:
+        conclusion = 'Dado a que la pendiente es menor a 0, en este caso negativa, podemos concluir\n que conforme el tiempo transcurra la pandemia ira disminuyendo hasta\n que ya no exista más'
+    with open ("Reporte3.png","rb") as imagen:
+        cadenaBase64 = base64.b64encode(imagen.read())
+    return jsonify({"imagen":cadenaBase64.decode('utf-8'),
+                    "formula": R3_Formula, 
+                    "RMSE":round(R3_rmse,4),
+                    "R2": round(R3_r2,4),
+                    "coef": R3_m[0],
+                    "intercept": R3_b[0],
+                    "Conclusion": conclusion})
+
+@app.route('/Reporte3', methods = ['POST'])
+def Reporte3():
+    global R3_col_casos, R3_col_dias, R3_coef,R3_m ,R3_b, R3_Formula, R3_r2, R3_rmse
+    VariablesParamR11 = {
+        "Variable1":request.json['Variable1'],
+        "Variable2":request.json['Variable2']
+    }
+    regr = linear_model.LinearRegression()
+    R3_col_casos = VariablesParamR11['Variable1']
+    R3_col_dias = VariablesParamR11['Variable2']
+
+    Datos = pd.DataFrame(dataset)
+    Ejex = Datos[R3_col_dias]
+    Ejey = Datos[R3_col_casos]
+    Eje_x =[]
+
+    for i in Datos.index:
+        Eje_x.append(i)
+    X = np.asarray(Eje_x)
+    X = X[:,np.newaxis]
+    Y = np.asarray(Ejey)[:,np.newaxis]
+    plt.scatter(X,Y)
+
+ 
+    regr.fit(X,Y)
+    R3_coef = regr.coef_
+    R3_m = regr.coef_[0]
+    R3_b = regr.intercept_
+    R3_y_p = regr.predict(X)
+
+    plt.scatter(X,Y,color = 'black')
+    plt.plot(X,R3_y_p, color = 'blue')
+    R3_Formula = 'y={0}*x+{1}'.format(R3_m[0], R3_b[0])
+    R3_r2 = r2_score(Y,R3_y_p)
+    R3_rmse = np.sqrt(mean_squared_error(Y,R3_y_p))
+
+    Titulo = 'Formula : {}; \n coeficiente: {} RMSE = {}; R2 = {}'.format(R3_Formula, R3_coef, round(R3_rmse,4), round(R3_r2,4))
+    plt.title("Indice de Progresión de la pandemia.\n " + Titulo, fontsize=10)
+    plt.xlabel('Dias')
+    plt.ylabel('Casos')
+    plt.savefig("Reporte3.png")
+    plt.close()
+    respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
+    return respuesta
+
+@app.route('/GetReporte4', methods=['GET'])
+def getReporte4():
+    if R4_Coeficiente[4] >0:
+        conclusion = 'Con nuestra prediccion y además el modelo con un coeficiente que resulta\nser positivo, podemos concluir que la mortalidad debido al covid-19 en este\ndepartamento ira aumentando si la pandemia no se logra controlar a tiempo'
+    else:
+        conclusion = 'Con nuestra prediccion y además el modelo con un coeficiente que resulta\nser negativo, podemos concluir que la mortalidad debido al covid-19 en este\ndepartamento ira disminuyendo debido a que probablemente la pandemia fue\ncontrolada'
+
+    with open ("Reporte4.png","rb") as imagen:
+        cadenaBase64 = base64.b64encode(imagen.read())
+    return jsonify({"imagen":cadenaBase64.decode('utf-8'),
+                    "pais":R4_departamento,
+                    "grado": R4_Grado_Polinomio, 
+                    "RMSE":round(R4_rmse,4),
+                    "R2": round(R4_r2,4),
+                    "Dias":R4_prediccion,
+                    "Prediccion":round(R4_pred,4),
+                    "Conclusion": conclusion})
+
 @app.route('/Reporte4', methods = ['POST'])
 def Reporte4():
-    global R4_departamento, R4_Col_departamento, R4_Col_muertes, R4_Col_Dias, R4_prediccion, R4_pred
+    global R4_departamento, R4_Col_departamento, R4_Col_muertes, R4_Col_Dias, R4_prediccion, R4_pred, R4_rmse, R4_r2, R4_Grado_Polinomio, R4_Coeficiente
     VariablesParamR4 = {
         "Variable1":request.json['Variable1'],
         "Variable2":request.json['Variable2'],
@@ -226,7 +341,7 @@ def Reporte4():
     X = np.asarray(Ejex)
     X = X[:,np.newaxis]
     Y = np.asarray(Ejey)[:,np.newaxis]
-    plt.scatter(Ejex,Y)
+    plt.scatter(X,Y)
 
     R4_Grado_Polinomio = 4
     Caracteristicas_Polinomio = PolynomialFeatures(degree=R4_Grado_Polinomio)
@@ -236,9 +351,8 @@ def Reporte4():
     nueva_y = modelo.predict(Transform_x)
     
     R4_rmse = np.sqrt(mean_squared_error(Ejey,nueva_y))
+    R4_Coeficiente = modelo.coef_
     R4_r2 = r2_score(Ejey,nueva_y)
-    print('RMSE: ', R4_rmse)
-    print('R2: ', R4_r2)
     
     x_nuevo_min = 0.0
     x_nuevo_max = R4_prediccion
@@ -256,21 +370,37 @@ def Reporte4():
     plt.plot(x_nuevo,y_nueva, color ='coral', linewidth = 3)
     plt.grid()
 
-    Titulo = 'Grado = {}; RMSE = {}; R2 = {}; Con una prediccion para: {} dias de = {} muertes'.format(R4_Grado_Polinomio, R4_rmse, R4_r2, R4_prediccion,R4_pred)
+    Titulo = 'Departamento: {} Grado = {}; RMSE = {}; R2 = {}; \n Con una prediccion para: {} dias de = {} muertes'.format(R4_departamento, R4_Grado_Polinomio, R4_rmse, R4_r2, R4_prediccion,R4_pred)
     plt.title("Prediccion de mortalidad por COVID en un departamento\n " + Titulo, fontsize=10)
     plt.xlim(x_nuevo_min,x_nuevo_max)
     plt.ylim(0,len(Ejey)+100)
-    plt.xlabel('x')
-    plt.ylabel('y')
+    plt.xlabel('Días')
+    plt.ylabel('Muertes')
     plt.savefig("Reporte4.png")
-    plt.show()
-
+    plt.close()
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
+@app.route('/GetReporte5', methods=['GET'])
+def getReporte5():
+    if R5_Coeficiente[3] >0:
+        conclusion = 'Con nuestra prediccion y además el modelo con un coeficiente que resulta ser\npositivo, podemos concluir que la mortalidad debido al covid-19 en este pais\nira aumentando si la pandemia no se logra controlar a tiempo'
+    else:
+        conclusion = 'Con nuestra prediccion y además el modelo con un coeficiente que resulta ser\nnegativo, podemos concluir que la mortalidad debido al covid-19 en este pais\nira disminuyendo debido a que probablemente la pandemia fue controlada'
+    with open ("Reporte5.png","rb") as imagen:
+        cadenaBase64 = base64.b64encode(imagen.read())
+    return jsonify({"imagen":cadenaBase64.decode('utf-8'),
+                    "pais":R5_pais,
+                    "grado": R5_Grado_Polinomio, 
+                    "RMSE":round(R5_rmse,4),
+                    "R2": round(R5_r2,4),
+                    "Dias":R5_prediccion,
+                    "Prediccion":round(R5_pred,4),
+                    "Conclusion":conclusion})
+
 @app.route('/Reporte5', methods = ['POST'])
 def Reporte5():
-    global R5_pais, R5_Col_pais, R5_Col_muertes, R5_Col_Dias, R5_prediccion
+    global R5_pais, R5_Col_pais, R5_Col_muertes, R5_Col_Dias, R5_prediccion, R5_Grado_Polinomio, R5_rmse, R5_r2, R5_pred, R5_Coeficiente
     VariablesParamR5 = {
         "Variable1":request.json['Variable1'],
         "Variable2":request.json['Variable2'],
@@ -300,7 +430,7 @@ def Reporte5():
     Y = np.asarray(Ejey)[:,np.newaxis]
     plt.scatter(Ejex,Y)
 
-    R5_Grado_Polinomio = 4
+    R5_Grado_Polinomio = 3
     Caracteristicas_Polinomio = PolynomialFeatures(degree=R5_Grado_Polinomio)
     Transform_x = Caracteristicas_Polinomio.fit_transform(X)
     modelo = linear_model.LinearRegression().fit(Transform_x,Ejey)
@@ -308,10 +438,8 @@ def Reporte5():
     nueva_y = modelo.predict(Transform_x)
     
     R5_rmse = np.sqrt(mean_squared_error(Ejey,nueva_y))
+    R5_Coeficiente = modelo.coef_
     R5_r2 = r2_score(Ejey,nueva_y)
-    print('RMSE: ', R5_rmse)
-    print('R2: ', R5_r2)
-    
     x_nuevo_min = 0.0
     x_nuevo_max = R5_prediccion
 
@@ -321,22 +449,45 @@ def Reporte5():
     x_nuevo_transormado = Caracteristicas_Polinomio.fit_transform(x_nuevo)
     y_nueva = modelo.predict(x_nuevo_transormado)
 
+    obtenerUltimo = np.size(y_nueva)
+
+    R5_pred = y_nueva[obtenerUltimo-1]
+
     plt.plot(x_nuevo,y_nueva, color ='coral', linewidth = 3)
     plt.grid()
 
-    Titulo = 'Grado = {}; RMSE = {}; R2 = {}'.format(R5_Grado_Polinomio, round(R5_rmse,2), round(R5_r2,2))
-    plt.title("Prediccion de mortalidad por COVID en un departamento\n " + Titulo, fontsize=10)
-    plt.xlabel('x')
-    plt.ylabel('y')
+    Titulo = 'Pais: {} \n Prediccion para {} dias es de {} muertes \n Grado = {}; RMSE = {}; R2 = {}'.format(R5_pais, R5_prediccion, round(R5_pred,2), R5_Grado_Polinomio, round(R5_rmse,2), round(R5_r2,2))
+    plt.title("Prediccion de mortalidad por COVID en un Pais\n " + Titulo, fontsize=10)
+    plt.xlabel('Días')
+    plt.ylabel('Muertes')
     plt.savefig("Reporte5.png")
-    plt.show()
+    plt.close()
 
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
+@app.route('/GetReporte6', methods=['GET'])
+def getReporte6():
+    if R6_m > 1:
+        conclusion = 'Dado a que la pendiente de nuestra ecuacion es mayor a 1, podemos concluir\nque nuestro numero de muertes por coronavirus crecera demasiado rapido conforme\n al tiempo pase, por lo cual la pandemia sera un riesgo mas grande para el pais'
+    elif R6_m< 1 or R6_m > 0 :
+        conclusion = 'Dado a que la pendiente se encuentra en un valor entre 0 y 1, nos indica\nque el numero de muertes seguira creciendo pero a un nivel mas constante,\n no tan rapido como si lo fuese mayor a 1'
+    elif R6_m < 0:
+        conclusion = 'Dado a que la pendiente es menor a 0, en este caso negativa, podemos concluir\n que conforme el tiempo transcurra la pandemia ira disminuyendo hasta que\n ya no exista más, por lo cual no existiran muertes por coronavirus'
+    with open ("Reporte6.png","rb") as imagen:
+        cadenaBase64 = base64.b64encode(imagen.read())
+    return jsonify({"imagen":cadenaBase64.decode('utf-8'),
+                    "pais":R6_pais,
+                    "formula": R6_Formula, 
+                    "RMSE":round(R6_rmse,4),
+                    "R2": round(R6_r2,4),
+                    "coef": R6_m,
+                    "intercept": round(R6_b,2),
+                    "Conclusion":conclusion})
+
 @app.route('/Reporte6', methods = ['POST'])
 def Reporte6():
-    global R6_pais, R6_Col_Pais, R6_Col_muertes, R6_Col_dias
+    global R6_pais, R6_Col_Pais, R6_Col_muertes, R6_Col_dias, R6_coef, R6_m, R6_b, R6_Formula, R6_r2, R6_rmse
     regr = linear_model.LinearRegression()
 
     VariablesParamR6 = {
@@ -364,27 +515,45 @@ def Reporte6():
     regr.fit(X,Ejey)
     R6_coef = regr.coef_
     R6_m = regr.coef_[0]
+    print(R6_m)
     R6_b = regr.intercept_
     R6_y_p = regr.predict(X)
     plt.scatter(X,Ejey,color = 'black')
     plt.plot(X,R6_y_p, color = 'blue')
-    R6_Formula = 'y={0}*x+{1}'.format(R6_m,2, R6_b,2)
+    R6_Formula = 'y={0}*x+{1}'.format(R6_m, round(R6_b,2))
     R6_r2 = r2_score(Ejey,R6_y_p)
     R6_rmse = np.sqrt(mean_squared_error(Ejey,R6_y_p))
 
-    Titulo = 'Formula = {}; \n coeficiente: {} RMSE = {}; R2 = {}'.format(R6_Formula, R6_coef,2, round(R6_rmse,2), round(R6_r2,2))
+    Titulo = 'Formula = {}; \n coeficiente: {} RMSE = {}; R2 = {}'.format(R6_Formula, R6_m, round(R6_rmse,2), round(R6_r2,2))
     plt.title("Análisis del número de muertes por coronavirus en un País.\n " + Titulo, fontsize=10)
-    plt.xlabel('x')
-    plt.ylabel('y')
+    plt.xlabel('Dias')
+    plt.ylabel('Muertes')
     plt.savefig("Reporte6.png")
-    plt.show()
+    plt.close()
 
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
+@app.route('/GetReporte7', methods=['GET'])
+def getReporte7():
+    if R7_Coeficiente[3] >0:
+        conclusion = 'Con nuestra prediccion y además el modelo con un coeficiente que resulta\nser positivo, podemos concluir que la tendencia de infectados debido al covid-19\n en este pais ira aumentando si la pandemia no se logra controlar a tiempo'
+    else:
+        conclusion = 'Con nuestra prediccion y además el modelo con un coeficiente que resulta\nser negativo, podemos concluir que la tendencia de infectados debido al covid-19\n en este pais ira disminuyendo debido a que probablemente la pandemia\nfue controlada'
+    with open ("Reporte7.png","rb") as imagen:
+        cadenaBase64 = base64.b64encode(imagen.read())
+    return jsonify({"imagen":cadenaBase64.decode('utf-8'),
+                    "pais":R7_pais,
+                    "grado": R7_Grado_Polinomio, 
+                    "RMSE":round(R7_rmse,4),
+                    "R2": round(R7_r2,4),
+                    "Dias":R7_Cant_Dias,
+                    "Prediccion":round(R7_pred,4),
+                    "Conclusion":conclusion})
+
 @app.route('/Reporte7', methods = ['POST'])
 def Reporte7():
-    global R7_pais, R7_Col_Pais, R7_Col_Fecha, R7_Col_Confirmados, R7_Grado_Polinomio, R7_rmse, R7_r2, R7_Cant_Dias, R7_pred
+    global R7_pais, R7_Col_Pais, R7_Col_Fecha, R7_Col_Confirmados, R7_Grado_Polinomio, R7_rmse, R7_r2, R7_Cant_Dias, R7_pred, R7_Coeficiente
     VariablesParam = {
         "Variable1":request.json['Variable1'],
         "Variable2":request.json['Variable2'],
@@ -421,9 +590,8 @@ def Reporte7():
     nueva_y = modelo.predict(Transform_x)
 
     R7_rmse = np.sqrt(mean_squared_error(Ejey,nueva_y))
+    R7_Coeficiente = modelo.coef_
     R7_r2 = r2_score(Ejey,nueva_y)
-    print('RMSE: ', R7_rmse)
-    print('R2: ', R7_r2)
 
     x_nuevo_min = 0.0
     x_nuevo_max = R7_Cant_Dias
@@ -444,13 +612,29 @@ def Reporte7():
     Titulo = 'Grado = {}; RMSE = {}; R2 = {} \n Con una prediccion para: {} dias de = {} Infectados'.format(R7_Grado_Polinomio, round(R7_rmse,2), round(R7_r2,2), R7_Cant_Dias,round(R7_pred,2))
     plt.title("Tendencia del número de infectados por día de un País.\n " + Titulo, fontsize=10)
     plt.savefig("Reporte7.png")
-    plt.show()
+    plt.close()
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
+@app.route('/GetReporte8', methods=['GET'])
+def getReporte8():
+    if R8_Coeficiente[3] >0:
+        conclusion = 'Con nuestra prediccion realizada para un año y el modelo generado con un\ncoeficiente que resulta ser positivo, podemos concluir que la prediccion de casos\nen este pais ira aumentando si la pandemia no se logra controlar a tiempo'
+    else:
+        conclusion = 'Con nuestra prediccion realizada para un año y el modelo generado con un\ncoeficiente que resulta ser negativo, podemos concluir que la prediccion de casos\nen este pais ira disminuyendo probablemente por que la pandemia en el pais fue controlada'
+    with open ("Reporte8.png","rb") as imagen:
+        cadenaBase64 = base64.b64encode(imagen.read())
+    return jsonify({"imagen":cadenaBase64.decode('utf-8'),
+                    "pais":R8_pais,
+                    "grado": R8_Grado_Polinomio, 
+                    "RMSE":round(R8_rmse,4),
+                    "R2": round(R8_r2,4),
+                    "Prediccion":round(R8_pred,4),
+                    "Conclusion":conclusion})
+
 @app.route('/Reporte8', methods =['POST'])
 def Reporte8():
-    global R8_pais, R8_col_pais, R8_col_confirmados, R8_Grado_Polinomio
+    global R8_pais, R8_col_pais, R8_col_confirmados, R8_Grado_Polinomio, R8_rmse, R8_r2, R8_pred, R8_Coeficiente
     regr = linear_model.LinearRegression()
     VariablesParamR8 = {
         "Variable1":request.json['Variable1'],
@@ -483,9 +667,9 @@ def Reporte8():
     nueva_y = modelo.predict(Transform_x)
     
     R8_rmse = np.sqrt(mean_squared_error(Ejey,nueva_y))
+    R8_Coeficiente = modelo.coef_
+    print(R8_Coeficiente)
     R8_r2 = r2_score(Ejey,nueva_y)
-    print('RMSE: ', R8_rmse)
-    print('R2: ', R8_r2)
     
     x_nuevo_min = 0.0
     x_nuevo_max = 365
@@ -496,24 +680,46 @@ def Reporte8():
     x_nuevo_transormado = Caracteristicas_Polinomio.fit_transform(x_nuevo)
     y_nueva = modelo.predict(x_nuevo_transormado)
 
+    obtenerUltimo = np.size(y_nueva)
+
+    R8_pred = y_nueva[obtenerUltimo-1]
+
     plt.plot(x_nuevo,y_nueva, color ='coral', linewidth = 3)
     plt.grid()
 
-    Titulo = 'Grado = {}; RMSE = {}; R2 = {}'.format(R8_Grado_Polinomio, round(R8_rmse,2), round(R8_r2,2))
+    Titulo = 'Grado = {}; RMSE = {}; R2 = {} \n prediccion de casos a un año: {}'.format(R8_Grado_Polinomio, round(R8_rmse,2), round(R8_r2,2), round(R8_pred,2))
     plt.title("Predicción de casos de un país para un año\n " + Titulo, fontsize=10)
     plt.xlabel('x')
     plt.ylabel('y')
     plt.savefig("Reporte8.png")
-    plt.show()
+    plt.close()
 
-    
 
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
+@app.route('/GetReporte9', methods=['GET'])
+def getReporte9():
+    if R9_m > 1:
+        conclusion = 'Dado a que la pendiente de nuestra ecuacion resultante es mayor a 1, podemos concluir\nque la tendencia de vacunacion en el pais ira creciendo de forma rapida conforme\nal tiempo pase, por lo cual la pandemia sera un riesgo menos para el pais'
+    elif R9_m< 1 or R9_m > 0 :
+        conclusion = 'Dado a que la pendiente de nuestra ecuacion resultante se encuentra en un valor\nentre 0 y 1, nos indica que la tendencia de vacunacion en el pais seguira creciendo pero\na un nivel mas constante, no tan rapido como si lo fuese mayor a 1, por lo cual\n esto nos indica que la mayoria de las personas no muestran interes en vacunarse'
+    elif R9_m < 0:
+        conclusion = 'Dado a que la pendiente de nuestra ecuacion resultante es menor a 0, en este caso\nnegativa, podemos concluir que conforme el tiempo avanza las personas no quieren ser\nvacunadas en contra del covid-19'
+    with open ("Reporte9.png","rb") as imagen:
+        cadenaBase64 = base64.b64encode(imagen.read())
+    return jsonify({"imagen":cadenaBase64.decode('utf-8'),
+                    "pais":R9_pais,
+                    "formula": R9_Formula, 
+                    "RMSE":round(R9_rmse,4),
+                    "R2": round(R9_r2,4),
+                    "coef": R9_m,
+                    "intercept": round(R9_b,2),
+                    "Conclusion":conclusion})
+
 @app.route('/Reporte9', methods = ['POST'])
 def Reporte9():
-    global R9_pais, R9_col_pais, R9_col_vacunacion, R9_col_dias
+    global R9_pais, R9_col_pais, R9_col_vacunacion, R9_col_dias, R9_m, R9_b, R9_r2, R9_rmse, R9_Formula
     regr = linear_model.LinearRegression()
     VariablesParamR9 = {
         "Variable1":request.json['Variable1'],
@@ -535,23 +741,51 @@ def Reporte9():
     X = pd.to_datetime(Ejex).astype(np.int64)
     X = X[:,np.newaxis]
     regr.fit(X,y)
-    m = regr.coef_[0]
-    b = regr.intercept_
+    R9_m = regr.coef_[0]
+    R9_b = regr.intercept_
     y_p = regr.predict(X)
     plt.scatter(X,y, color = 'black')
     plt.plot(X,y_p,color = 'blue')
-    r2 = r2_score(y,y_p)
-    rmse = np.sqrt(mean_squared_error(y, y_p))
-    Titulo = 'Ecuación: Y = {}*x + {}; RMSE = {}; R2 = {}'.format(m,b, round(rmse,2), r2)
-    plt.title("Prediccion de mortalidad por COVID en un departamento\n " + Titulo, fontsize=10)
+    R9_r2 = r2_score(y,y_p)
+    R9_rmse = np.sqrt(mean_squared_error(y, y_p))
+    R9_Formula = 'y={0}*x+{1}'.format(R9_m, round(R9_b,2))
+    Titulo = 'Ecuación: {}; RMSE = {}; R2 = {}'.format(R9_Formula, round(R9_rmse,2), round(R9_r2,2))
+    plt.title("Tendencia de la vacunación de en un País.\n " + Titulo, fontsize=10)
     plt.xlabel('x')
     plt.ylabel('y')
     plt.savefig("Reporte9.png")
-    plt.show()
+    plt.close()
+
+    respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
+    return respuesta
+
+@app.route('/GetReporte10', methods=['GET'])
+def getReporte10():
+    if R10_coeficiente[3] > R10_coeficiente2[3]:
+        conclusion = 'Gracias a los modelos generados para cada pais y los resultados obtenidos\npodemos determinar que el país '+ R10_pais_1 + ' Presenta una mejor tasa o\ncomportamiento de vacunación en sus habitantes'
+    elif R10_coeficiente[3] < R10_coeficiente2[3]:
+        conclusion = 'Gracias a los modelos generados para cada pais y los resultados obtenidos\npodemos determinar que el país '+ R10_pais_2 + ' Presenta una mejor tasa o\ncomportamiento de vacunación en sus habitantes'
+    else:
+        conclusion = 'Gracias a los modelos generados para cada pais y los resultados obtenidos\npodemos determinar los paises presentan una tasa de vacunación similar\n en sus habitantes'
+        
+    with open ("Reporte101.png","rb") as imagen:
+        cadenaBase64i1 = base64.b64encode(imagen.read())
+    with open ("Reporte102.png","rb") as imagen2:
+        cadenaBase64i2 = base64.b64encode(imagen2.read())
+    return jsonify({"imagen1":cadenaBase64i1.decode('utf-8'),
+                    "imagen2":cadenaBase64i2.decode('utf-8'),
+                    "pais1":R10_pais_1,
+                    "pais2":R10_pais_2,
+                    "grado": R10_Grado_Polinomio, 
+                    "RMSE1":round(R10_rmse,4),
+                    "R21": round(R10_r2,4),
+                    "RMSE2":round(R10_rmse2,4),
+                    "R22": round(R10_r22,4),
+                    "Conclusion":conclusion})
 
 @app.route('/Reporte10', methods = ['POST'])
 def Reporte10():
-    global R10_pais_1, R10_pais_2, R10_Col_pais, R10_Col_vacunacion, R10_Col_Fecha, R10_Grado_Polinomio, R10_r2, R10_rmse
+    global R10_pais_1, R10_pais_2, R10_Col_pais, R10_Col_vacunacion, R10_Col_Fecha, R10_Grado_Polinomio, R10_r2, R10_rmse, R10_rmse2, R10_r22, R10_coeficiente, R10_coeficiente2
     VariablesParamR10 = {
         "Variable1":request.json['Variable1'],
         "Variable2":request.json['Variable2'],
@@ -589,10 +823,8 @@ def Reporte10():
     nueva_y = modelo.predict(Transform_x)
 
     R10_rmse = np.sqrt(mean_squared_error(Y,nueva_y))
+    R10_coeficiente = modelo.coef_[0]
     R10_r2 = r2_score(Y,nueva_y)
-    print('RMSE: ', R10_rmse)
-    print('R2: ', R10_r2)
-
     plt.plot(Ejex, Y, color='coral', linewidth=3)
     plt.grid()
     Titulo = 'Pais: {} \n Grado = {}; RMSE = {}; R2 = {}'.format(R10_pais_1, R10_Grado_Polinomio, round(R10_rmse,2), round(R10_r2,2))
@@ -613,9 +845,8 @@ def Reporte10():
     nueva_y2 = modelo2.predict(Transform_x2)
 
     R10_rmse2 = np.sqrt(mean_squared_error(Y2,nueva_y2))
+    R10_coeficiente2 = modelo.coef_[0]
     R10_r22 = r2_score(Y2,nueva_y2)
-    print('RMSE: ', R10_rmse2)
-    print('R2: ', R10_r22)
 
     plt.plot(Ejex2, Y2, color='coral', linewidth=3)
     plt.grid()
@@ -628,9 +859,28 @@ def Reporte10():
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
+@app.route('/GetReporte11', methods=['GET'])
+def getReporte11():
+    if R11_m[0] > 1:
+        conclusion = 'Dado a que la pendiente de nuestra ecuacion mayor a 1, podemos concluir\nque el porcentaje de hombres infectados crecera demasiado rapido conforme al tiempo\npase, por lo cual la pandemia sera un riesgo para la poblacion'
+    elif R11_m[0]< 1 or R11_m[0] > 0 :
+        conclusion = 'Dado a que la pendiente se encuentra en un valor entre 0 y 1, nos indica\nque el porcentaje seguira creciendo pero a un nivel mas constante, no tan rapido\ncomo si lo fuese mayor a 1, por lo cual puede ser posible que la pandemia se haya\ncontrolado un poco'
+    elif R11_m[0] < 0:
+        conclusion = 'Dado a que la pendiente es menor a 0, en este caso negativa, podemos\nconcluir que conforme el tiempo transcurra la pandemia ira disminuyendo hasta que ya\nno exista más, por lo cual ya no se tendrán hombres infectados'
+    with open ("Reporte11.png","rb") as imagen:
+        cadenaBase64 = base64.b64encode(imagen.read())
+    return jsonify({"imagen":cadenaBase64.decode('utf-8'),
+                    "pais":R11_pais,
+                    "formula": R11_Formula, 
+                    "RMSE":round(R11_rmse,4),
+                    "R2": round(R11_r2,4),
+                    "coef": R11_m[0],
+                    "intercept": round(R11_b[0],2),
+                    "Conclusion": conclusion})
+
 @app.route('/Reporte11', methods = ['POST'])
 def Reporte11():
-    global R11_pais, R11_col_pais, R11_col_infectados, R11_col_genero, R11_col_fecha
+    global R11_pais, R11_col_pais, R11_col_infectados, R11_col_genero, R11_col_fecha, R11_Formula, R11_r2, R11_rmse, R11_m, R11_b
     VariablesParamR11 = {
         "Variable1":request.json['Variable1'],
         "Variable2":request.json['Variable2'],
@@ -666,25 +916,51 @@ def Reporte11():
     R11_m = regr.coef_[0]
     R11_b = regr.intercept_
     R11_y_p = regr.predict(Eje_Xf)
+
+    print(R11_m[0])
+    print(R11_b[0])
+
     plt.scatter(Eje_Xf,Y,color = 'black')
     plt.plot(Eje_Xf,R11_y_p, color = 'blue')
-    R11_Formula = 'y={0}*x+{1}'.format(R11_m,2, R11_b,2)
+    R11_Formula = 'y={0}*x+{1}'.format(R11_m[0], R11_b[0])
     R11_r2 = r2_score(Y,R11_y_p)
     R11_rmse = np.sqrt(mean_squared_error(Y,R11_y_p))
 
-    Titulo = 'Formula : {}; \n coeficiente: {} RMSE = {}; R2 = {}'.format(R11_Formula, R11_coef,2, round(R11_rmse,2), round(R11_r2,2))
+    Titulo = 'Formula : {}; \n coeficiente: {} RMSE = {}; R2 = {}'.format(R11_Formula, R11_coef, round(R11_rmse,4), round(R11_r2,4))
     plt.title("Porcentaje de hombres infectados por covid-19 en un País desde el primer caso activo.\n " + Titulo, fontsize=10)
     plt.xlabel('x')
     plt.ylabel('y')
     plt.savefig("Reporte11.png")
-    plt.show()
+    plt.close()
 
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
+@app.route('/GetReporte13', methods=['GET'])
+def getReporte13():
+    if R13_coeficiente[3] > R13_coeficiente2[3]:
+        conclusion = 'Gracias a los modelos generados para casos confirmados vs muerte y edad vs\nmuerte y los resultados obtenidos podemos determinar que los casos confirmados vs\nmuertes son mayores a la edad vs muerte'
+    elif R13_coeficiente[3] < R13_coeficiente2[3]:
+        conclusion = 'Gracias a los modelos generados para casos confirmados vs muerte y edad vs\nmuerte y los resultados obtenidos podemos determinar que la edad vs muertes son\nmayores a los casos confirmados vs muerte'
+    else:
+        conclusion = 'Gracias a los modelos generados para casos confirmados vs muerte y edad vs\nmuerte y los resultados obtenidos podemos determinar que el pais presenta una\nrelacion similar entre la edad y los casos confirmados'
+    with open ("Reporte131.png","rb") as imagen:
+        cadenaBase64i1 = base64.b64encode(imagen.read())
+    with open ("Reporte132.png","rb") as imagen2:
+        cadenaBase64i2 = base64.b64encode(imagen2.read())
+    return jsonify({"imagen1":cadenaBase64i1.decode('utf-8'),
+                    "imagen2":cadenaBase64i2.decode('utf-8'),
+                    "pais1":R13_pais,
+                    "grado": R13_Grado_Polinomio, 
+                    "RMSE1":round(R13_rmse,4),
+                    "R21": round(R13_r2,4),
+                    "RMSE2":round(R13_rmse2,4),
+                    "R22": round(R13_r22,4),
+                    "Conclusion":conclusion})
+
 @app.route('/Reporte13',methods = ['POST'])
 def Reporte13():
-    global R13_pais, R13_col_pais, R13_col_infectados, R13_col_muertes, R13_col_edad
+    global R13_pais, R13_col_pais, R13_col_infectados, R13_col_muertes, R13_col_edad, R13_rmse, R13_r2, R13_rmse2, R13_r22, R13_Grado_Polinomio, R13_coeficiente, R13_coeficiente2
     VariablesParamR13 = {
         "Variable1":request.json['Variable1'],
         "Variable2":request.json['Variable2'],
@@ -721,9 +997,8 @@ def Reporte13():
     nueva_y = modelo.predict(Transform_x)
 
     R13_rmse = np.sqrt(mean_squared_error(Y,nueva_y))
+    R13_coeficiente = modelo.coef_[0]
     R13_r2 = r2_score(Y,nueva_y)
-    print('RMSE: ', R13_rmse)
-    print('R2: ', R13_r2)
 
     plt.plot(Ejex, Y, color='coral', linewidth=3)
     plt.grid()
@@ -745,9 +1020,8 @@ def Reporte13():
     nueva_y2 = modelo2.predict(Transform_x2)
 
     R13_rmse2 = np.sqrt(mean_squared_error(Y2,nueva_y2))
+    R13_coeficiente2 = modelo.coef_[0]
     R13_r22 = r2_score(Y2,nueva_y2)
-    print('RMSE: ', R13_rmse2)
-    print('R2: ', R13_r22)
 
     plt.plot(X2, Y2, color='coral', linewidth=3)
     plt.grid()
@@ -759,9 +1033,24 @@ def Reporte13():
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
+@app.route('/GetReporte14', methods=['GET'])
+def getReporte14():
+    if R14_Coeficiente[3] >0:
+        conclusion = 'Con nuestra prediccion realizada para un año y el modelo generado con un\ncoeficiente que resulta ser positivo, podemos concluir que las muertes de personas\npara estas regiones ira aumentando si la pandemia no se logra controlar a tiempo'
+    else:
+        conclusion = 'Con nuestra prediccion realizada para un año y el modelo generado con un\ncoeficiente que resulta ser negativo, podemos concluir que las muertes para estas\nregiones iran disminuyendo, con el paso del tiempo'
+    with open ("Reporte14.png","rb") as imagen:
+        cadenaBase64 = base64.b64encode(imagen.read())    
+    return jsonify({"imagen":cadenaBase64.decode('utf-8'),
+                    "pais":R14_pais,
+                    "grado": R14_Grado_Polinomio, 
+                    "RMSE":round(R14_rmse,4),
+                    "R2": round(R14_r2,4),
+                    "Conclusion":conclusion})
+
 @app.route('/Reporte14', methods = ['POST'])
 def Reporte14():
-    global R14_pais, R14_col_pais, R14_col_region, R14_col_muertes
+    global R14_pais, R14_col_pais, R14_col_region, R14_col_muertes, R14_Grado_Polinomio, R14_rmse, R14_r2, R14_Coeficiente
     VariablesParamR14 = {
         "Variable1":request.json['Variable1'],
         "Variable2":request.json['Variable2'],
@@ -799,9 +1088,9 @@ def Reporte14():
     nueva_y = modelo.predict(Transform_x)
 
     R14_rmse = np.sqrt(mean_squared_error(Y,nueva_y))
+    R14_Coeficiente = modelo.coef_[0]
+    print(R14_Coeficiente)
     R14_r2 = r2_score(Y,nueva_y)
-    print('RMSE: ', R14_rmse)
-    print('R2: ', R14_r2)
 
     plt.plot(X, Y, color='coral', linewidth=3)
     plt.grid()
@@ -813,9 +1102,24 @@ def Reporte14():
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
+@app.route('/GetReporte15', methods=['GET'])
+def getReporte15():
+    if R15_Coeficiente[3] >0:
+        conclusion = 'Con el modelo generado y sus resultados se puede concluir que la tendencia\nde los casos confirmados en este departamento, seguirá en aumento mientras que la\npandemia no sea controlada'
+    else:
+        conclusion = 'Con el modelo generado y sus resultados se puede concluir que la tendencia\nde los casos confirmados en este departamento, seguirá en disminucion ya que la\npandemia ha sido controlada'
+    with open ("Reporte15.png","rb") as imagen:
+        cadenaBase64 = base64.b64encode(imagen.read())    
+    return jsonify({"imagen":cadenaBase64.decode('utf-8'),
+                    "pais":R15_pais,
+                    "grado": R15_Grado_Polinomio, 
+                    "RMSE":round(R15_rmse,4),
+                    "R2": round(R15_r2,4),
+                    "Conclusion":conclusion})
+
 @app.route('/Reporte15', methods = ['POST'])
 def Reporte15():
-    global R15_pais, R15_Departamento, R15_col_pais, R15_col_departamento, R15_col_fecha, R15_col_infectados
+    global R15_pais, R15_Departamento, R15_col_pais, R15_col_departamento, R15_col_fecha, R15_col_infectados, R15_Grado_Polinomio, R15_rmse, R15_r2, R15_Coeficiente
     VariablesParamR15 = {
         "Variable1":request.json['Variable1'],
         "Variable2":request.json['Variable2'],
@@ -856,23 +1160,42 @@ def Reporte15():
     nueva_y = modelo.predict(Transform_x)
 
     R15_rmse = np.sqrt(mean_squared_error(Y,nueva_y))
+    R15_Coeficiente = modelo.coef_[0]
     R15_r2 = r2_score(Y,nueva_y)
-    print('RMSE: ', R15_rmse)
-    print('R2: ', R15_r2)
 
     plt.plot(X, Y, color='coral', linewidth=3)
     plt.grid()
     Titulo = 'Pais: {} \n Departamento: {} \n Grado = {}; RMSE = {}; R2 = {}'.format(R15_pais,R15_Departamento, R15_Grado_Polinomio, round(R15_rmse,2), round(R15_r2,2))
     plt.title("Tendencia de casos confirmados de Coronavirus en un departamento de un País.\n " + Titulo, fontsize=10)
     plt.savefig("Reporte15.png")
+    plt.close()
  
     
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
+@app.route('/GetReporte16', methods=['GET'])
+def getReporte16():
+    if R16_m[0] > 1:
+        conclusion = 'Dado a que la pendiente de nuestra ecuacion mayor a 1, podemos concluir\nque porcentaje de muertes frente a los casos confirmados ira en aumento conforme\nel tiempo avance'
+    elif R16_m[0]< 1 or R16_m[0] > 0 :
+        conclusion = 'Dado a que la pendiente se encuentra en un valor entre 0 y 1, nos indica\nque el porcentaje de muertes tendra un aumento constante un poco menor a si la\npendiente fuese mayor a 1'
+    elif R16_m[0] < 0:
+        conclusion = 'Dado a que la pendiente es menor a 0, en este caso negativa, podemos\nconcluir que conforme el tiempo transcurra el porcentaje de muertes ira en disminución'
+    with open ("Reporte16.png","rb") as imagen:
+        cadenaBase64 = base64.b64encode(imagen.read())
+    return jsonify({"imagen":cadenaBase64.decode('utf-8'),
+                    "pais":R16_pais,
+                    "formula": R16_Formula, 
+                    "RMSE":round(R16_rmse,4),
+                    "R2": round(R16_r2,4),
+                    "coef": R16_m[0],
+                    "intercept": R16_b[0],
+                    "Conclusion":conclusion})
+
 @app.route('/Reporte16', methods = ['POST'])
 def Reporte16():
-    global R16_pais,R16_col_pais,R16_Region,R16_col_region,R16_continente, R16_col_continente, R16_col_muertes, R16_col_casos
+    global R16_pais,R16_col_pais,R16_Region,R16_col_region,R16_continente, R16_col_continente, R16_col_muertes, R16_col_casos, R16_Formula, R16_r2, R16_rmse, R16_m, R16_b
     regr = linear_model.LinearRegression()
     VariablesParamR16 = {
         "Variable1":request.json['Variable1'],
@@ -907,8 +1230,6 @@ def Reporte16():
         for i in range(len(Y)):
             if np.isnan(Y[i]):
                 Y[i] = 0.0
-            
-        print(Y)
         Ejey = Ejey[:,np.newaxis]
         
         regr.fit(Ejey,Y)
@@ -918,7 +1239,7 @@ def Reporte16():
         R16_y_p = regr.predict(Ejey)
         plt.scatter(Ejey,Y,color = 'black')
         plt.plot(Ejey,R16_y_p, color = 'blue')
-        R16_Formula = 'y={0}*x+{1}'.format(R16_m,2, R16_b,2)
+        R16_Formula = 'y={0}*x+{1}'.format(R16_m[0], R16_b[0])
         R16_r2 = r2_score(Y,R16_y_p)
         R16_rmse = np.sqrt(mean_squared_error(Y,R16_y_p))
 
@@ -927,6 +1248,7 @@ def Reporte16():
         plt.xlabel('Casos')
         plt.ylabel('Porcentaje Muertes')
         plt.savefig("Reporte16.png")
+        plt.close()
         
     elif R16_continente != '':
         Datos = dataset.loc[dataset[R16_col_continente]==R16_continente]
@@ -951,7 +1273,7 @@ def Reporte16():
         R16_y_p = regr.predict(Ejey)
         plt.scatter(Ejey,Y,color = 'black')
         plt.plot(Ejey,R16_y_p, color = 'blue')
-        R16_Formula = 'y={0}*x+{1}'.format(R16_m,2, R16_b,2)
+        R16_Formula = 'y={0}*x+{1}'.format(R16_m[0], R16_b[0])
         R16_r2 = r2_score(Y,R16_y_p)
         R16_rmse = np.sqrt(mean_squared_error(Y,R16_y_p))
 
@@ -960,6 +1282,7 @@ def Reporte16():
         plt.xlabel('Casos')
         plt.ylabel('Porcentaje Muertes')
         plt.savefig("Reporte16.png")
+        plt.close()
     elif R16_Region != '':
         Datos = dataset.loc[dataset[R16_col_region]==R16_Region]
         Datos = pd.DataFrame(Datos)
@@ -983,7 +1306,7 @@ def Reporte16():
         R16_y_p = regr.predict(Ejey)
         plt.scatter(Ejey,Y,color = 'black')
         plt.plot(Ejey,R16_y_p, color = 'blue')
-        R16_Formula = 'y={0}*x+{1}'.format(R16_m,2, R16_b,2)
+        R16_Formula = 'y={0}*x+{1}'.format(R16_m[0], R16_b[0])
         R16_r2 = r2_score(Y,R16_y_p)
         R16_rmse = np.sqrt(mean_squared_error(Y,R16_y_p))
 
@@ -992,13 +1315,33 @@ def Reporte16():
         plt.xlabel('Casos')
         plt.ylabel('Porcentaje Muertes')
         plt.savefig("Reporte16.png")
+        plt.close()
 
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
+@app.route('/GetReporte17', methods=['GET'])
+def getReporte17():
+    if R17_m[0] > 1:
+        conclusion = 'Dado a que la pendiente de nuestra ecuacion mayor a 1, podemos concluir\nque la tasa de comportamiento de los casos activos en relacion al numero de muertes\ndel continente va en aumento'
+    elif R17_m[0]< 1 or R17_m[0] > 0 :
+        conclusion = 'Dado a que la pendiente se encuentra en un valor entre 0 y 1, nos indica\nque la tasa de comportamiento de los casos activos en relacion al numero de muertes\ndel continente aumenta de manera constante'
+    elif R17_m[0] < 0:
+        conclusion = 'Dado a que la pendiente es menor a 0, en este caso negativa, podemos\nconcluir que conforme el tiempo transcurra la tasa de comportamiento de los casos\nactivos en relacion al numero de muertes del continente disminuye de manera constante'
+    with open ("Reporte17.png","rb") as imagen:
+        cadenaBase64 = base64.b64encode(imagen.read())
+    return jsonify({"imagen":cadenaBase64.decode('utf-8'),
+                    "pais":R17_Continente,
+                    "formula": R17_Formula, 
+                    "RMSE":round(R17_rmse,4),
+                    "R2": round(R17_r2,4),
+                    "coef": R17_m[0],
+                    "intercept": R17_b[0],
+                    "Conclusion":conclusion})
+
 @app.route('/Reporte17', methods = ['POST'])
 def Reporte17():
-    global R17_Continente, R17_col_continente, R17_col_muertes, R17_col_casos
+    global R17_Continente, R17_col_continente, R17_col_muertes, R17_col_casos, R17_Formula, R17_rmse, R17_r2, R17_m, R17_b
     regr = linear_model.LinearRegression()
     VariablesParamR17 = {
         "Variable1":request.json['Variable1'],
@@ -1028,7 +1371,7 @@ def Reporte17():
     R17_y_p = regr.predict(Ejex)
     plt.scatter(Ejex,Ejey,color = 'black')
     plt.plot(Ejex,R17_y_p, color = 'blue')
-    R17_Formula = 'y={0}*x+{1}'.format(R17_m,2, R17_b,2)
+    R17_Formula = 'y={0}*x+{1}'.format(R17_m[0], R17_b[0])
     R17_r2 = r2_score(Ejey,R17_y_p)
     R17_rmse = np.sqrt(mean_squared_error(Ejey,R17_y_p))
 
@@ -1046,10 +1389,25 @@ def Reporte18():
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
+@app.route('/GetReporte19', methods=['GET'])
+def getReporte19():
+    if R19_Coeficiente[3] >0:
+        conclusion = 'Con el modelo generado y sus resultados se puede concluir que el numero\nde muertes del ultimo día del año aun iran en aumento debido al mal control de la\npandemia Covid 19'
+    else:
+        conclusion = 'Con el modelo generado y sus resultados se puede concluir que el numero\nde muertes del ultimo dia del año presentarán una disminución'
+    with open ("Reporte19.png","rb") as imagen:
+        cadenaBase64 = base64.b64encode(imagen.read())    
+    return jsonify({"imagen":cadenaBase64.decode('utf-8'),
+                    "pais":R19_pais,
+                    "grado": R19_Grado_Polinomio, 
+                    "RMSE":round(R19_rmse,4),
+                    "R2": round(R19_r2,4),
+                    "Conclusion":conclusion})
+
 @app.route('/Reporte19', methods =['POST'])
 def Reporte19():
 
-    global R19_pais, R19_col_pais, R19_col_Dias, R19_col_muertes
+    global R19_pais, R19_col_pais, R19_col_Dias, R19_col_muertes, R19_Grado_Polinomio, R19_rmse, R19_r2, R19_Coeficiente
     VariablesParamR19 = {
         "Variable1":request.json['Variable1'],
         "Variable2":request.json['Variable2'],
@@ -1084,9 +1442,8 @@ def Reporte19():
     nueva_y = modelo.predict(Transform_x)
     
     R19_rmse = np.sqrt(mean_squared_error(Y,nueva_y))
+    R19_Coeficiente = modelo.coef_[0]
     R19_r2 = r2_score(Y,nueva_y)
-    print('RMSE: ', R19_rmse)
-    print('R2: ', R19_r2)
     
     x_nuevo_min = 0.0
     x_nuevo_max = 365.0
@@ -1104,24 +1461,110 @@ def Reporte19():
     plt.plot(x_nuevo,y_nueva, color ='coral', linewidth = 3)
     plt.grid()
 
-    Titulo = 'Grado = {}; RMSE = {}; R2 = {}; Con una prediccion para: {} dias de = {} muertes'.format(R19_Grado_Polinomio, R19_rmse, R19_r2, 365,R19_pred)
+    Titulo = 'Grado = {}; RMSE = {}; R2 = {}; \n Con una prediccion para: {} dias de = {} muertes'.format(R19_Grado_Polinomio, R19_rmse, R19_r2, 365,R19_pred)
     plt.title("Predicción de muertes en el último día del primer año de infecciones en un país.\n " + Titulo, fontsize=10)
     plt.xlabel('x')
     plt.ylabel('y')
     plt.savefig("Reporte19.png")
-    plt.show()
+    plt.close()
 
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
+
+@app.route('/GetReporte20', methods = ['GET'])
+def getReporte20():
+    if tasa1 > tasa2:
+        conclusion = 'podemos concluir que la tasa de casos diarios vs casos acumulados, es\nmayor a la tasa de muertes vs casos acumulados '
+    elif tasa2 > tasa1:
+        conclusion = 'podemos concluir que la tasa de tasa de muertes vs casos acumulados, es\nmayor a la de casos diarios vs casos acumulados '
+    else:
+        conclusion = 'podemos concluir que la tasa de casos diarios vs casos acumulados es\nsimilar a la tasa de muertes vs casos acumulados '
+    with open ("Reporte20.png","rb") as imagen:
+        cadenaBase64i1 = base64.b64encode(imagen.read())
+    with open ("Reporte201.png","rb") as imagen2:
+        cadenaBase64i2 = base64.b64encode(imagen2.read())
+    return jsonify({"imagen1":cadenaBase64i1.decode('utf-8'),
+                    "imagen2":cadenaBase64i2.decode('utf-8'),
+                    "t1":tasa1,
+                    "t2":tasa2,
+                    "Conclusion":conclusion})
 
 @app.route('/Reporte20', methods = ['POST'])
 def Reporte20():
+    global R20_col_casos, R20_col_diarios, R20_col_muertes, tasa1, tasa2
+    regr = linear_model.LinearRegression()
+    VariablesParamR20 = {
+        "Variable1":request.json['Variable1'],
+        "Variable2":request.json['Variable2'],
+        "Variable3":request.json['Variable3']
+
+    }
+    R20_col_casos = VariablesParamR20['Variable1']
+    R20_col_diarios = VariablesParamR20['Variable2']
+    R20_col_muertes = VariablesParamR20['Variable3']
+
+    Datos = pd.DataFrame(dataset)
+    Ejex = Datos[R20_col_casos]
+    Ejey = Datos[R20_col_diarios]
+
+    Resultado = Ejey / Ejex * 100
+
+    tasa1 = str(round(Resultado.mean(),2))
+
+    AuxX = Datos[R20_col_casos]
+
+    plt.plot(AuxX, Resultado)
+    plt.title("Tasa de crecimiento de casos de COVID-19 en relación con nuevos casos diarios\n ", fontsize=10)
+    plt.xlabel('Casos')
+    plt.ylabel('Casos diarios')
+    plt.savefig("Reporte20.png")
+    plt.close()
+
+    Datos = pd.DataFrame(dataset)
+    Ejex = Datos[R20_col_casos]
+    Ejey = Datos[R20_col_muertes]
+
+    Resultado = Ejey / Ejex * 100
+    tasa2 = str(round(Resultado.mean(),2))
+
+    AuxX = Datos[R20_col_casos]
+
+    plt.plot(AuxX, Resultado)
+    plt.title("Tasa de crecimiento de casos de COVID-19 en relación con las muertes\n ", fontsize=10)
+    plt.xlabel('Casos')
+    plt.ylabel('Muertes')
+    plt.savefig("Reporte201.png")
+    plt.close()
+
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
+@app.route('/GetReporte21', methods=['GET'])
+def getReporte21():
+    if R21_pred[0] < R21_pred2[0]:
+        conclusion= 'Para la prediccion realizada con los modelos obtenidoss podemos determinar\nque las muertes son menores a los casos en todo el mundo'
+    elif R21_pred[0] > R21_pred2[0]:
+        conclusion= 'Para la prediccion realizada con los modelos obtenidoss podemos determinar\nque los casos son menores a las muertes en todo el mundo'
+    else:
+        conclusion='Para la prediccion realizada con los modelos obtenidoss podemos determinar\nque los casos son iguales a las muertes en todo el mundo'
+    with open ("Reporte21.png","rb") as imagen:
+        cadenaBase64i1 = base64.b64encode(imagen.read())
+    with open ("Reporte212.png","rb") as imagen2:
+        cadenaBase64i2 = base64.b64encode(imagen2.read())
+    return jsonify({"imagen1":cadenaBase64i1.decode('utf-8'),
+                    "imagen2":cadenaBase64i2.decode('utf-8'),
+                    "grado": R21_Grado_Polinomio, 
+                    "RMSE1":round(R21_rmse,4),
+                    "R21": round(R21_r2,4),
+                    "RMSE2":round(R21_rmse2,4),
+                    "R22": round(R21_r22,4),
+                    "pred1":R21_pred[0],
+                    "pred2":R21_pred2[0],
+                    "Conclusion":conclusion})
+                    
 @app.route('/Reporte21', methods = ['POST'])
 def Reporte21():
-    global R21_col_casos, R21_col_muertes, R21_col_fecha, R21_dias
+    global R21_col_casos, R21_col_muertes, R21_col_fecha, R21_dias, R21_Grado_Polinomio, R21_rmse, R21_r2, R21_pred, R21_rmse2,R21_r22,R21_pred2, R21_Coeficiente2, R21_Coeficiente
     VariablesParamR19 = {
         "Variable1":request.json['Variable1'],
         "Variable2":request.json['Variable2'],
@@ -1157,9 +1600,8 @@ def Reporte21():
     nueva_y = modelo.predict(Transform_x)
     
     R21_rmse = np.sqrt(mean_squared_error(Y,nueva_y))
+    R21_Coeficiente = modelo.coef_[0]
     R21_r2 = r2_score(Y,nueva_y)
-    print('RMSE: ', R21_rmse)
-    print('R2: ', R21_r2)
     
     x_nuevo_min = 0.0
     x_nuevo_max = R21_dias
@@ -1177,12 +1619,11 @@ def Reporte21():
     plt.plot(x_nuevo,y_nueva, color ='coral', linewidth = 3)
     plt.grid()
 
-    Titulo = 'Grado = {}; RMSE = {}; R2 = {}; Con una prediccion para: {} dias de = {} muertes'.format(R21_Grado_Polinomio, R21_rmse, R21_r2, R21_dias,R21_pred)
+    Titulo = 'Grado = {}; RMSE = {}; R2 = {}; \n Con una prediccion para: {} dias de = {} muertes'.format(R21_Grado_Polinomio, R21_rmse, R21_r2, R21_dias,R21_pred)
     plt.title("Predicciones de casos y muertes en todo el mundo.\n " + Titulo, fontsize=10)
     plt.xlabel('Dias')
     plt.ylabel('Muertes')
     plt.savefig("Reporte21.png")
-    plt.show()
     plt.close()
 
     Ejex = []
@@ -1204,10 +1645,9 @@ def Reporte21():
 
     nueva_y = modelo.predict(Transform_x)
     
-    R21_rmse = np.sqrt(mean_squared_error(Y,nueva_y))
-    R21_r2 = r2_score(Y,nueva_y)
-    print('RMSE: ', R21_rmse)
-    print('R2: ', R21_r2)
+    R21_rmse2 = np.sqrt(mean_squared_error(Y,nueva_y))
+    R21_Coeficiente2 = modelo.coef_[0]
+    R21_r22 = r2_score(Y,nueva_y)
     
     x_nuevo_min = 0.0
     x_nuevo_max = R21_dias
@@ -1220,25 +1660,44 @@ def Reporte21():
 
     obtenerUltimo = np.size(y_nueva)
 
-    R21_pred = y_nueva[obtenerUltimo-1]
+    R21_pred2 = y_nueva[obtenerUltimo-1]
 
     plt.plot(x_nuevo,y_nueva, color ='coral', linewidth = 3)
     plt.grid()
 
-    Titulo = 'Grado = {}; RMSE = {}; R2 = {}; Con una prediccion para: {} dias de = {} Casos'.format(R21_Grado_Polinomio, R21_rmse, R21_r2, R21_dias,R21_pred)
+    Titulo = 'Grado = {}; RMSE = {}; R2 = {}; \n Con una prediccion para: {} dias de = {} Casos'.format(R21_Grado_Polinomio, R21_rmse2, R21_r22, R21_dias,R21_pred2)
     plt.title("Predicciones de casos y muertes en todo el mundo.\n " + Titulo, fontsize=10)
     plt.xlabel('Dias')
     plt.ylabel('Casos')
     plt.savefig("Reporte212.png")
-    plt.show()
+    plt.close()
 
 
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
+@app.route('/GetReporte_22', methods=['GET'])
+def getReporte22():
+    if R22_m[0] > 1:
+        conclusion = 'Dado a que la pendiente de nuestra ecuacion mayor a 1, podemos concluir que\nla tasa de mortalidad debido a la infeccion ira creciendo de manera muy rapida, lo\ncual es un riesgo para la población mundial'
+    elif R22_m[0]< 1 or R22_m[0] > 0 :
+        conclusion = 'Dado a que la pendiente se encuentra en un valor entre 0 y 1, nos muestra\nque la tasa de mortalidad debido a la infeccion aumenta lentamente'
+    elif R22_m[0] < 0:
+        conclusion = 'Dado a que la pendiente es menor a 0, en este caso negativa, podemos\nconcluir que conforme el tiempo transcurra la tasa de mortalidad disminuira'
+    with open ("Reporte22.png","rb") as imagen:
+        cadenaBase64 = base64.b64encode(imagen.read())
+    return jsonify({"imagen":cadenaBase64.decode('utf-8'),
+                    "pais":R22_pais,
+                    "formula": R22_Formula, 
+                    "RMSE":round(R22_rmse,4),
+                    "R2": round(R22_r2,4),
+                    "coef": round(R22_m[0],2),
+                    "intercept": round(R22_b[0],2),
+                    "Conclusion":conclusion})
+
 @app.route('/Reporte22',methods = ['POST'])
 def Reporte22():
-    global R22_col_muertes, R22_col_infectados, R22_col_pais, R22_pais, R22_col_fecha
+    global R22_col_muertes, R22_col_infectados, R22_col_pais, R22_pais, R22_col_fecha, R22_Formula, R22_r2, R22_rmse, R22_b, R22_m
     regr = linear_model.LinearRegression()
     VariablesParamR19 = {
         "Variable1":request.json['Variable1'],
@@ -1276,23 +1735,38 @@ def Reporte22():
     R22_y_p = regr.predict(X)
     plt.scatter(X,Y,color = 'black')
     plt.plot(X,R22_y_p, color = 'blue')
-    R22_Formula = 'y={0}*x+{1}'.format(R22_m,2, R22_b,2)
+    R22_Formula = 'y={0}*x+{1}'.format(R22_m[0], R22_b[0])
     R22_r2 = r2_score(Y,R22_y_p)
-    R2_rmse = np.sqrt(mean_squared_error(Y,R22_y_p))
+    R22_rmse = np.sqrt(mean_squared_error(Y,R22_y_p))
 
-    Titulo = 'Formula : {}; \n coeficiente: {} RMSE = {}; R2 = {}'.format(R22_Formula, R22_coef,2, round(R2_rmse,2), round(R22_r2,2))
+    Titulo = 'Formula : {}; \n coeficiente: {} RMSE = {}; R2 = {}'.format(R22_Formula, R22_coef, round(R22_rmse,2), round(R22_r2,2))
     plt.title("Tasa de mortalidad por coronavirus (COVID-19) en un país.\n " + Titulo, fontsize=10)
     plt.xlabel('x')
     plt.ylabel('y')
     plt.savefig("Reporte22.png")
-    plt.show()
+    plt.close()
 
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
+@app.route('/GetReporte23', methods=['GET'])
+def getReporte23():
+    if R23_Coeficiente[3] >0:
+        conclusion = 'Se puede concluir que los factores de muerte son un tema a tratar cuando\nse trata de la infeccion por covid 19, ya que se muestra que estos factores aumentan\nla probabilidad de muerte'
+    else:
+        conclusion = 'se concluye que los factores indicados no tienen relacion con las muertes\npor covid 19'
+    with open ("Reporte23.png","rb") as imagen:
+        cadenaBase64 = base64.b64encode(imagen.read())    
+    return jsonify({"imagen":cadenaBase64.decode('utf-8'),
+                    "pais":R23_pais,
+                    "grado": R23_Grado_Polinomio, 
+                    "RMSE":round(R23_rmse,4),
+                    "R2": round(R23_r2,4),
+                    "Conclusion":conclusion})
+
 @app.route('/Reporte23',methods = ['POST'])
 def Reporte23():
-    global R23_pais, R23_col_pais, R23_col_muertes, R23_col_factores
+    global R23_pais, R23_col_pais, R23_col_muertes, R23_col_factores, R23_Grado_Polinomio, R23_rmse, R23_r2, R23_Coeficiente
     VariablesParamR23 = {
         "Variable1":request.json['Variable1'],
         "Variable2":request.json['Variable2'],
@@ -1330,9 +1804,9 @@ def Reporte23():
     nueva_y = modelo.predict(Transform_x)
 
     R23_rmse = np.sqrt(mean_squared_error(Y,nueva_y))
+    R23_Coeficiente = modelo.coef_[0]
+    print(R23_Coeficiente)
     R23_r2 = r2_score(Y,nueva_y)
-    print('RMSE: ', R23_rmse)
-    print('R2: ', R23_r2)
 
     plt.plot(X, Y, color='coral', linewidth=3)
     plt.grid()
@@ -1344,9 +1818,31 @@ def Reporte23():
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
+@app.route('/GetReporte24', methods=['GET'])
+def getReporte24():
+    if R24_Coeficiente[3] > R24_Coeficiente2[3]:
+        conclusion = 'Se logra determinar que el numero de casos detectados es mayor al numeró\nde pruebas realizadas en el país'
+    elif R24_Coeficiente[3] < R24_Coeficiente2[3]:
+        conclusion = 'Se logra determinar que el numero de pruebas es mayor al numeró de casos\ndetectados en el país'
+    else:
+        conclusion = 'se determina que el numero de pruebas realizadas es igual al numero de\ncasos detectados en el país, dando un indice de positividad del 100%'
+    with open ("Reporte24.png","rb") as imagen:
+        cadenaBase64i1 = base64.b64encode(imagen.read())
+    with open ("Reporte242.png","rb") as imagen2:
+        cadenaBase64i2 = base64.b64encode(imagen2.read())
+    return jsonify({"imagen1":cadenaBase64i1.decode('utf-8'),
+                    "imagen2":cadenaBase64i2.decode('utf-8'),
+                    "pais":R24_pais,
+                    "grado": R24_Grado_Polinomio, 
+                    "RMSE1":round(R24_rmse,4),
+                    "R21": round(R24_r2,4),
+                    "RMSE2":round(R24_rmse2,4),
+                    "R22": round(R24_r22,4),
+                    "Conclusion":conclusion})
+
 @app.route('/Reporte24', methods = ['POST'])
 def Reporte24():
-    global R24_pais, R24_col_pais, R24_col_casos, R24_col_cantpruebas, R24_col_fecha
+    global R24_pais, R24_col_pais, R24_col_casos, R24_col_cantpruebas, R24_col_fecha, R24_Grado_Polinomio, R24_rmse, R24_r2, R24_rmse2, R24_r22, R24_Coeficiente, R24_Coeficiente2
     VariablesParamR23 = {
         "Variable1":request.json['Variable1'],
         "Variable2":request.json['Variable2'],
@@ -1384,16 +1880,14 @@ def Reporte24():
     nueva_y = modelo.predict(Transform_x)
 
     R24_rmse = np.sqrt(mean_squared_error(Y,nueva_y))
+    R24_Coeficiente = modelo.coef_[0]
     R24_r2 = r2_score(Y,nueva_y)
-    print('RMSE: ', R24_rmse)
-    print('R2: ', R24_r2)
 
     plt.plot(X, Y, color='coral', linewidth=3)
     plt.grid()
     Titulo = 'Pais: {} \n Grado = {}; RMSE = {}; R2 = {}'.format(R24_pais, R24_Grado_Polinomio, round(R24_rmse,2), round(R24_r2,2))
     plt.title("Comparación entre el número de casos detectados y el número de pruebas de un país.\n " + Titulo, fontsize=10)
     plt.savefig("Reporte24.png")
-    plt.show()
     plt.close()
 
     Ejex = []
@@ -1416,24 +1910,38 @@ def Reporte24():
     nueva_y = modelo.predict(Transform_x)
 
     R24_rmse2 = np.sqrt(mean_squared_error(Y,nueva_y))
+    R24_Coeficiente2 = modelo.coef_[0]
     R24_r22 = r2_score(Y,nueva_y)
-    print('RMSE: ', R24_rmse2)
-    print('R2: ', R24_r22)
 
     plt.plot(X, Y, color='coral', linewidth=3)
     plt.grid()
     Titulo = 'Pais: {} \n Grado = {}; RMSE = {}; R2 = {}'.format(R24_pais, R24_Grado_Polinomio, round(R24_rmse2,2), round(R24_r22,2))
     plt.title("Comparación entre el número de casos detectados y el número de pruebas de un país.\n " + Titulo, fontsize=10)
     plt.savefig("Reporte242.png")
-    plt.show()
     plt.close()
 
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
+@app.route('/GetReporte25', methods=['GET'])
+def getReporte25():
+    if R25_coeficiente[3] > 0:
+        Conclusion = 'Debido a que la grafica muestra una pendiente positiva, en el futuro aun\ntendremos aumento de casos confirmados para la infeccion covid 19'
+    else:
+        Conclusion = 'Debido a que la grafica muestra una pendiente negativa, en el futuro\nprobablemente tendremos una disminucion de los casos confirmados'
+    with open ("Reporte25.png","rb") as imagen:
+        cadenaBase64 = base64.b64encode(imagen.read())    
+    return jsonify({"imagen":cadenaBase64.decode('utf-8'),
+                    "grado": R25_Grado_Polinomio, 
+                    "RMSE":round(R25_rmse,4),
+                    "R2": round(R25_r2,4),
+                    "Dias":R25_prediccion,
+                    "prediccion":round(R25_pred[0],2),
+                    "Conclusion":Conclusion})
+                    
 @app.route('/Reporte25', methods = ['POST'])
 def Reporte25():
-    global R25_col_casos, R25_col_fecha, R25_prediccion
+    global R25_col_casos, R25_col_fecha, R25_prediccion, R25_Grado_Polinomio, R25_rmse, R25_r2, R25_pred, R25_coeficiente
     VariablesParamR25 = {
         "Variable1":request.json['Variable1'],
         "Variable2":request.json['Variable2'],
@@ -1466,9 +1974,8 @@ def Reporte25():
     nueva_y = modelo.predict(Transform_x)
     
     R25_rmse = np.sqrt(mean_squared_error(Y,nueva_y))
+    R25_coeficiente = modelo.coef_[0]
     R25_r2 = r2_score(Y,nueva_y)
-    print('RMSE: ', R25_rmse)
-    print('R2: ', R25_r2)
     
     x_nuevo_min = 0.0
     x_nuevo_max = R25_prediccion
@@ -1486,12 +1993,11 @@ def Reporte25():
     plt.plot(x_nuevo,y_nueva, color ='coral', linewidth = 3)
     plt.grid()
 
-    Titulo = 'Grado = {}; RMSE = {}; \n R2 = {}; \nCon una prediccion para: {} dias de = {} Casos confirmados'.format(R25_Grado_Polinomio, R25_rmse, R25_r2, R25_prediccion,R25_pred)
+    Titulo = 'Grado = {}; RMSE = {}; \n R2 = {}; \nCon una prediccion para: {} dias \n se tienen aproximadamente = {} Casos confirmados'.format(R25_Grado_Polinomio, R25_rmse, R25_r2, R25_prediccion,R25_pred[0])
     plt.title("Predicción de casos confirmados por día\n " + Titulo, fontsize=10)
     plt.xlabel('x')
     plt.ylabel('y')
     plt.savefig("Reporte25.png")
-    plt.show()
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
