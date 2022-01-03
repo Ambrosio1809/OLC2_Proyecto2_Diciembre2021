@@ -4,10 +4,10 @@ services:
   frontend:
       container_name: React
       image: nginx
-        build:
-          context: ./Proyecto2/proyecto2compi2
-          dockerfile: Dockerfile
-        volumes:
-          - ./Proyecto2/proyecto2compi2/build:/usr/share/nginx/html
-        ports:
-          - "80:80"
+      build:
+        context: ./Proyecto2/proyecto2compi2
+        dockerfile: Dockerfile
+      volumes:
+        - ./Proyecto2/proyecto2compi2/build:/usr/share/nginx/html
+      ports:
+        - "80:80"
