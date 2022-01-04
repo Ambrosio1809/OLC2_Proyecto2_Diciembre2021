@@ -116,10 +116,15 @@ def Reporte1():
         Ejex = Datos[R1_Col_Fecha]
         Ejey = Datos[R1_Col_Confirmados]
 
+        Ejex = Ejex.replace(np.nan,0)
+        Ejey = Ejey.replace(np.nan,0)
+
         X = pd.to_datetime(Ejex).astype(np.int64)
         X = X[:,np.newaxis]
-        Y = Ejey[:,np.newaxis]
+        Y = np.asarray(Ejey)[:,np.newaxis]
         plt.scatter(Ejex,Y)
+
+        
 
         R1_Grado_Polinomio = 3
         Caracteristicas_Polinomio = PolynomialFeatures(degree=R1_Grado_Polinomio)
@@ -184,6 +189,8 @@ def Reporte2():
     Datos = pd.DataFrame(Datos)
     Ejex = []
     Ejey = Datos[R2_Col_Infectados]
+    
+    Ejey = Ejey.replace(np.nan,0)
 
     for i in Datos.index:
         Ejex.append(i)
@@ -193,6 +200,7 @@ def Reporte2():
     X = X[:,np.newaxis]
     Y = np.asarray(Ejey)[:,np.newaxis]
     plt.scatter(Ejex,Y)
+
 
     R2_Grado_Polinomio = 4
     Caracteristicas_Polinomio = PolynomialFeatures(degree=R2_Grado_Polinomio)
@@ -265,12 +273,16 @@ def Reporte3():
     Ejey = Datos[R3_col_casos]
     Eje_x =[]
 
+    Ejey = Ejey.replace(np.nan,0)
+
     for i in Datos.index:
         Eje_x.append(i)
     X = np.asarray(Eje_x)
     X = X[:,np.newaxis]
     Y = np.asarray(Ejey)[:,np.newaxis]
     plt.scatter(X,Y)
+
+    
 
  
     regr.fit(X,Y)
@@ -334,6 +346,8 @@ def Reporte4():
     Datos = pd.DataFrame(Datos)
     Ejex = []
     Ejey = Datos[R4_Col_muertes]
+    
+    Ejey = Ejey.replace(np.nan,0)
 
     for i in Datos.index:
         Ejex.append(i)
@@ -421,6 +435,8 @@ def Reporte5():
     Datos = pd.DataFrame(Datos)
     Ejex = []
     Ejey = Datos[R5_Col_muertes]
+    
+    Ejey = Ejey.replace(np.nan,0)
 
     for i in Datos.index:
         Ejex.append(i)
@@ -444,7 +460,7 @@ def Reporte5():
     x_nuevo_min = 0.0
     x_nuevo_max = R5_prediccion
 
-    x_nuevo = np.linspace(x_nuevo_min,x_nuevo_max,50)
+    x_nuevo = np.linspace(x_nuevo_min,0.0,50)
     x_nuevo = x_nuevo[:,np.newaxis]
 
     x_nuevo_transormado = Caracteristicas_Polinomio.fit_transform(x_nuevo)
@@ -508,6 +524,9 @@ def Reporte6():
 
     Ejex = Datos[R6_Col_dias]
     Ejey = Datos[R6_Col_muertes]
+
+    Ejex = Ejex.replace(np.nan,0)
+    Ejey = Ejey.replace(np.nan,0)
     
     X = pd.to_datetime(Ejex).astype(np.int64)
     X = np.asarray(X)
@@ -516,7 +535,6 @@ def Reporte6():
     regr.fit(X,Ejey)
     R6_coef = regr.coef_
     R6_m = regr.coef_[0]
-    print(R6_m)
     R6_b = regr.intercept_
     R6_y_p = regr.predict(X)
     plt.scatter(X,Ejey,color = 'black')
@@ -573,6 +591,8 @@ def Reporte7():
     Datos = pd.DataFrame(Datos)
     Ejex = []
     Ejey = Datos[R7_Col_Confirmados]
+    
+    Ejey = Ejey.replace(np.nan,0)
 
     for i in Datos.index:
         Ejex.append(i)
@@ -652,6 +672,8 @@ def Reporte8():
     Datos = pd.DataFrame(Datos)
     Ejex = []
     Ejey = Datos[R8_col_confirmados]
+
+    Ejey = Ejey.replace(np.nan,0)
 
     for i in Datos.index:
         Ejex.append(i)
@@ -740,6 +762,10 @@ def Reporte9():
     Ejex = Datos[R9_col_dias]
 
     y = Datos[R9_col_vacunacion]
+
+    Ejex = Ejex.replace(np.nan,0)
+    y = y.replace(np.nan,0)
+
     X = pd.to_datetime(Ejex).astype(np.int64)
     X = X[:,np.newaxis]
     regr.fit(X,y)
@@ -812,6 +838,12 @@ def Reporte10():
     Ejex2 = Datos2[R10_Col_Fecha]
     Ejey2 = Datos2[R10_Col_vacunacion]
 
+    Ejex = Ejex.replace(np.nan,0)
+    Ejey = Ejey.replace(np.nan,0)
+
+    Ejex2 = Ejex2.replace(np.nan,0)
+    Ejey2 = Ejey2.replace(np.nan,0)
+
     X = pd.to_datetime(Ejex).astype(np.int64)
     X = X[:,np.newaxis]
     Y = Ejey[:,np.newaxis]
@@ -873,7 +905,7 @@ def getReporte11():
         cadenaBase64 = base64.b64encode(imagen.read())
     return jsonify({"imagen":cadenaBase64.decode('utf-8'),
                     "pais":R11_pais,
-                    "genero": R11_Genero, 
+                    "genero": "hombre", 
                     "porcentaje": Porcentaje,
                     "Conclusion": conclusion})
 
@@ -884,42 +916,35 @@ def Reporte11():
         "Variable1":request.json['Variable1'],
         "Variable2":request.json['Variable2'],
         "Variable3":request.json['Variable3'],
-        "Variable4":request.json['Variable4'],
-        "Variable5":request.json['Variable5'],
-        "Variable6":request.json['Variable6']
+        "Variable4":request.json['Variable4']
     }
     regr = linear_model.LinearRegression()
     R11_pais = VariablesParamR11['Variable1']
     R11_col_pais = VariablesParamR11['Variable2']
     R11_col_infectados = VariablesParamR11['Variable3']
     R11_col_genero = VariablesParamR11['Variable4']
-    R11_Genero = VariablesParamR11['Variable5']
-    R11_col_fecha = VariablesParamR11['Variable6']
 
 
     Datos = dataset.loc[dataset[R11_col_pais]==R11_pais]
     Datos = pd.DataFrame(Datos)
 
-    Ejex = Datos[R11_col_fecha]
+    Ejex = Datos[R11_col_genero]
     Ejey = Datos[R11_col_infectados]
 
-    Datos2 = Datos.loc[Datos[R11_col_genero]==R11_Genero]
-    Datos2 = pd.DataFrame(Datos2)
+    Ejex = Ejex.replace(np.nan,0)
+    Ejey = Ejey.replace(np.nan,0)
 
-    Ejex_g = Datos2[R11_col_fecha]
-    Ejey_g = Datos2[R11_col_infectados]
 
     Var1 = 0
 
-    for i in Ejey_g:
+    for i in Ejey:
         Var1 = Var1+1
     
     Porcentaje = (Var1 / Ejey.size) *100
 
     print(Porcentaje)
 
-    plt.scatter(Ejex,Ejey)
-    plt.plot(Ejex_g, Ejey_g)    
+    plt.scatter(Ejex,Ejey)   
 
     Titulo = '{} %'.format(Porcentaje)
     plt.title("Porcentaje de hombres infectados por covid-19 en un País desde el primer caso activo.\n " + Titulo, fontsize=10)
@@ -976,7 +1001,12 @@ def Reporte13():
 
     Ejex2 = Datos[R13_col_muertes]
     Ejey2 = Datos[R13_col_edad]
+    
+    Ejex = Ejex.replace(np.nan,0)
+    Ejey = Ejey.replace(np.nan,0)
 
+    Ejex2 = Ejex.replace(np.nan,0)
+    Ejey2 = Ejey.replace(np.nan,0)   
 
     #X = pd.to_datetime(Ejex).astype(np.int64)
     X = Ejex[:,np.newaxis]
@@ -1070,6 +1100,9 @@ def Reporte14():
     Eje_x = []
     Ejey = Datos2[R14_col_muertes]
 
+    Ejex = Ejex.replace(np.nan,0)
+    Ejey = Ejey.replace(np.nan,0)
+
     Ejex = np.asarray(Ejex)
     for i in Datos2.index:
         Eje_x.append(i)
@@ -1146,9 +1179,15 @@ def Reporte15():
 
     Ejex = Datos2[R15_col_fecha]
     Ejey = Datos2[R15_col_infectados]
+    Eje_x = []
+    
+    Ejey = Ejey.replace(np.nan,0)
 
-    X = pd.to_datetime(Ejex).astype(np.int64)
-    X = np.asarray(Ejex)
+    for i in Datos2.index:
+        Eje_x.append(i)
+
+    #X = pd.to_datetime(Ejex).astype(np.int64)
+    X = np.asarray(Eje_x)
     X = X[:,np.newaxis]
     Y = np.asarray(Ejey)[:,np.newaxis]
 
@@ -1171,8 +1210,6 @@ def Reporte15():
     plt.title("Tendencia de casos confirmados de Coronavirus en un departamento de un País.\n " + Titulo, fontsize=10)
     plt.savefig("Reporte15.png")
     plt.close()
- 
-    
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
@@ -1225,6 +1262,9 @@ def Reporte16():
         Datos = pd.DataFrame(Datos)
         Ejex = Datos[R16_col_muertes]
         Ejey = Datos[R16_col_casos]
+
+        Ejex = Ejex.replace(np.nan,0)
+        Ejey = Ejey.replace(np.nan,1)
         
         Prueba = (Ejex *100)/Ejey
         Y = Prueba[:,np.newaxis]
@@ -1257,6 +1297,9 @@ def Reporte16():
         Datos = pd.DataFrame(Datos)
         Ejex = Datos[R16_col_muertes]
         Ejey = Datos[R16_col_casos]
+
+        Ejex = Ejex.replace(np.nan,0)
+        Ejey = Ejey.replace(np.nan,1)
         
         Prueba = (Ejex *100)/Ejey
         Y = Prueba[:,np.newaxis]
@@ -1290,6 +1333,9 @@ def Reporte16():
         Datos = pd.DataFrame(Datos)
         Ejex = Datos[R16_col_muertes]
         Ejey = Datos[R16_col_casos]
+
+        Ejex = Ejex.replace(np.nan,0)
+        Ejey = Ejey.replace(np.nan,1)
         
         Prueba = (Ejex *100)/Ejey
         Y = Prueba[:,np.newaxis]
@@ -1362,6 +1408,9 @@ def Reporte17():
     Datos = pd.DataFrame(Datos)
     Ejex = Datos[R17_col_casos]
     Ejey = Datos[R17_col_muertes]
+
+    Ejex = Ejex.replace(np.nan,0)
+    Ejey = Ejey.replace(np.nan,0)
     
     Ejex = Ejex[:,np.newaxis]
     Ejey = Ejey[:,np.newaxis]
@@ -1428,11 +1477,16 @@ def Reporte18():
 
     Ejex = Datos2[R18_col_dias]
     Ejey = Datos2[R18_col_infectados]
+    Eje_x = []
+    
+    Ejex = Ejex.replace(np.nan,0)
+    Ejey = Ejey.replace(np.nan,0)
+    
+    for i in Datos2.index:
+        Eje_x.append(i)
 
-    print(Ejex)
-    print(Ejey)
-    X = pd.to_datetime(Ejex).astype(np.int64)
-    X = np.asarray(Ejex)
+    #X = pd.to_datetime(Ejex).astype(np.int64)
+    X = np.asarray(Eje_x)
     X = X[:,np.newaxis]
     Y = np.asarray(Ejey)[:,np.newaxis]    
 
@@ -1496,6 +1550,8 @@ def Reporte19():
     Datos = pd.DataFrame(Datos)
     Ejex = []
     Ejey = Datos[R19_col_muertes]
+    
+    Ejey = Ejey.replace(np.nan,0)
 
     for i in Datos.index:
         Ejex.append(i)
@@ -1579,6 +1635,9 @@ def Reporte20():
     Ejex = Datos[R20_col_casos]
     Ejey = Datos[R20_col_diarios]
 
+    Ejex = Ejex.replace(np.nan,1)
+    Ejey = Ejey.replace(np.nan,0)
+
     Resultado = Ejey / Ejex * 100
 
     tasa1 = str(round(Resultado.mean(),2))
@@ -1595,6 +1654,9 @@ def Reporte20():
     Datos = pd.DataFrame(dataset)
     Ejex = Datos[R20_col_casos]
     Ejey = Datos[R20_col_muertes]
+
+    Ejex = Ejex.replace(np.nan,1)
+    Ejey = Ejey.replace(np.nan,0)
 
     Resultado = Ejey / Ejex * 100
     tasa2 = str(round(Resultado.mean(),2))
@@ -1654,6 +1716,8 @@ def Reporte21():
 
     Ejex = []
     Ejey = Datos[R21_col_muertes]
+    
+    Ejey = Ejey.replace(np.nan,0)
 
     for i in Datos.index:
         Ejex.append(i)
@@ -1700,6 +1764,8 @@ def Reporte21():
 
     Ejex = []
     Ejey = Datos[R21_col_casos]
+    
+    Ejey = Ejey.replace(np.nan,0)
 
     for i in Datos.index:
         Ejex.append(i)
@@ -1790,6 +1856,8 @@ def Reporte22():
 
     Ejex = []
     Ejey = Datos[R22_col_muertes]
+    
+    Ejey = Ejey.replace(np.nan,0)
 
     for i in Datos.index:
         Ejex.append(i)
@@ -1853,19 +1921,20 @@ def Reporte23():
 
     Datos = dataset.loc[dataset[R23_col_pais]==R23_pais]
     Datos = pd.DataFrame(Datos)
-    Resultado = Datos.groupby([R23_col_factores]).sum().reset_index()
-    Ejex = Resultado[R23_col_factores]
+    Ejex = Datos[R23_col_factores]
     Eje_x = []
-    Ejey = Resultado[R23_col_muertes]
+    Ejey = Datos[R23_col_muertes]
+
+    Ejex = Ejex.replace(np.nan,0)
+    Ejey = Ejey.replace(np.nan,0)
 
     Ejex = np.asarray(Ejex)
-    for i in Resultado.index:
+    for i in Datos.index:
         Eje_x.append(i)
     
     X = np.asarray(Eje_x)
 
-    plt.xticks(X, Ejex)
-    X = X[:,np.newaxis]
+    X = Ejex[:,np.newaxis]
     Y = Ejey[:,np.newaxis]
 
     
@@ -1936,6 +2005,8 @@ def Reporte24():
 
     Ejex = []
     Ejey = Datos[R24_col_casos]
+    
+    Ejey = Ejey.replace(np.nan,0)
 
     for i in Datos.index:
         Ejex.append(i)
@@ -1966,6 +2037,8 @@ def Reporte24():
 
     Ejex = []
     Ejey = Datos[R24_col_cantpruebas]
+
+    Ejey = Ejey.replace(np.nan,0)
 
     for i in Datos.index:
         Ejex.append(i)
@@ -2030,6 +2103,8 @@ def Reporte25():
     Datos = pd.DataFrame(dataset)
     Ejex = []
     Ejey = Datos[R25_col_casos]
+    
+    Ejey = Ejey.replace(np.nan,0)
 
     for i in Datos.index:
         Ejex.append(i)

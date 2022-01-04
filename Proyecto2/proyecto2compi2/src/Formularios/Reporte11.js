@@ -9,9 +9,7 @@ class Reporte11 extends React.Component {
             Variable1: '',
             Variable2: '',
             Variable3: '',
-            Variable4: '',
-            Variable5: '',
-            Variable6: ''
+            Variable4: ''
         }
     }
 
@@ -70,14 +68,6 @@ class Reporte11 extends React.Component {
                         <Form.Group controlId="formUsename">
                             <Form.Label>Ingrese Nombre Columna Para Genero</Form.Label>
                             <Form.Control type="text" name="Variable4" placeholder="Columna_genero" onChange={this.handleChange} value={this.state.form.Variable4} />
-                        </Form.Group>
-                        <Form.Group controlId="formUsename">
-                            <Form.Label>Ingrese Nombre Genero</Form.Label>
-                            <Form.Control type="text" name="Variable5" placeholder="Genero" onChange={this.handleChange} value={this.state.form.Variable5} />
-                        </Form.Group>
-                        <Form.Group controlId="formUsename">
-                            <Form.Label>Ingrese Nombre Columna Para Fechas</Form.Label>
-                            <Form.Control type="text" name="Variable6" placeholder="Columna_Fechas" onChange={this.handleChange} value={this.state.form.Variable6} />
                         </Form.Group>
                         <Button variant="primary" type="submit" onSubmit={this.handleSubmit}>
                             Visualizar
