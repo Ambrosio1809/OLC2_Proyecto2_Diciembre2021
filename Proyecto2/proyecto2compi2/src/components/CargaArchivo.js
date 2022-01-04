@@ -23,7 +23,7 @@ function CargaMasiva (){
                 body: f
                 
             }
-            await fetch('http://localhost:4000/CargarArchivo',config)
+            await fetch('http://3.16.160.225:4000/CargarArchivo',config)
             .then(response=>response.json())
             .then(data => console.log(data.message))
             .catch(error=>{
