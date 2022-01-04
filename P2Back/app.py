@@ -9,6 +9,7 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 
+
 from datetime import datetime
 
 import pandas as pd
@@ -115,9 +116,18 @@ def Reporte1():
         Datos = pd.DataFrame(Datos)
         Ejex = Datos[R1_Col_Fecha]
         Ejey = Datos[R1_Col_Confirmados]
-
-        Ejex = Ejex.replace(np.nan,0)
-        Ejey = Ejey.replace(np.nan,0)
+        print(tipo)
+        
+        if tipo == 3:
+            Ejex = Ejex.replace("",0)
+            Ejey = Ejey.replace("",0)
+        elif tipo == 2:
+            Ejex = Ejex.replace(np.nan,0)
+            Ejey = Ejey.replace(np.nan,0)
+        elif tipo == 1:
+            Ejex = Ejex.replace(np.nan,0)
+            Ejey = Ejey.replace(np.nan,0)
+        
 
         X = pd.to_datetime(Ejex).astype(np.int64)
         X = X[:,np.newaxis]
@@ -139,13 +149,13 @@ def Reporte1():
 
         plt.plot(Ejex, Y, color='coral', linewidth=3)
         plt.grid()
-        Titulo = 'Grado = {}; RMSE = {}; R2 = {}'.format(R1_Grado_Polinomio, round(R1_rmse,2), round(R1_r2,2))
-        plt.title("Tendencia de la Infeccion por Covid-19 en un país\n " + Titulo, fontsize=10)
+        Titulo = '{} Grado = {}; RMSE = {}; R2 = {}'.format(R1_pais, R1_Grado_Polinomio, round(R1_rmse,2), round(R1_r2,2))
+        plt.title("Tendencia de la Infeccion por Covid-19 en\n " + Titulo, fontsize=10)
         plt.xlabel("Dias")
         plt.ylabel("Casos")
         plt.savefig("Reporte1.png")
         plt.close()
-
+        
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
@@ -187,12 +197,18 @@ def Reporte2():
 
     Datos = dataset.loc[dataset[R2_Col_pais]==R2_pais]
     Datos = pd.DataFrame(Datos)
+    dff = Datos.groupby([R2_Col_Dias]).sum().reset_index()
     Ejex = []
     Ejey = Datos[R2_Col_Infectados]
     
-    Ejey = Ejey.replace(np.nan,0)
+    if tipo == 3:
+        Ejey = Ejey.replace("",0)
+    elif tipo == 2:
+        Ejey = Ejey.replace(np.nan,0)
+    elif tipo == 1:
+        Ejey = Ejey.replace(np.nan,0)
 
-    for i in Datos.index:
+    for i in dff.index:
         Ejex.append(i)
     
     #X = pd.to_datetime(Ejex).astype(np.int64)
@@ -272,27 +288,35 @@ def Reporte3():
     Ejex = Datos[R3_col_dias]
     Ejey = Datos[R3_col_casos]
     Eje_x =[]
+    Eje_y = []
 
-    Ejey = Ejey.replace(np.nan,0)
+    
+    if tipo == 3:
+        Ejey = Ejey.replace("",0)
+    elif tipo == 2:
+        Ejey = Ejey.replace(np.nan,0)
+    elif tipo == 1:
+        Ejex = Ejex.replace(np.nan,0)
+        Ejey = Ejey.replace(np.nan,0)
+
+    for i in range(len(Ejey)):
+        Eje_y.append(float(Ejey[i]))
 
     for i in Datos.index:
         Eje_x.append(i)
     X = np.asarray(Eje_x)
     X = X[:,np.newaxis]
-    Y = np.asarray(Ejey)[:,np.newaxis]
+    Y = np.asarray(Eje_y)[:,np.newaxis]
     plt.scatter(X,Y)
 
-    
-
- 
     regr.fit(X,Y)
     R3_coef = regr.coef_
     R3_m = regr.coef_[0]
     R3_b = regr.intercept_
     R3_y_p = regr.predict(X)
 
-    plt.scatter(X,Y,color = 'black')
-    plt.plot(X,R3_y_p, color = 'blue')
+    plt.scatter(X,Y,color = 'blue')
+    plt.plot(X,R3_y_p, color = 'coral')
     R3_Formula = 'y={0}*x+{1}'.format(R3_m[0], R3_b[0])
     R3_r2 = r2_score(Y,R3_y_p)
     R3_rmse = np.sqrt(mean_squared_error(Y,R3_y_p))
@@ -344,12 +368,18 @@ def Reporte4():
 
     Datos = dataset.loc[dataset[R4_Col_departamento]==R4_departamento]
     Datos = pd.DataFrame(Datos)
+    dff = Datos.groupby([R4_Col_Dias]).sum().reset_index()
     Ejex = []
     Ejey = Datos[R4_Col_muertes]
     
-    Ejey = Ejey.replace(np.nan,0)
+    if tipo == 3:
+        Ejey = Ejey.replace("",0)
+    elif tipo == 2:
+        Ejey = Ejey.replace(np.nan,0)
+    elif tipo == 1:
+        Ejey = Ejey.replace(np.nan,0)
 
-    for i in Datos.index:
+    for i in dff.index:
         Ejex.append(i)
     
     #X = pd.to_datetime(Ejex).astype(np.int64)
@@ -433,12 +463,18 @@ def Reporte5():
 
     Datos = dataset.loc[dataset[R5_Col_pais]==R5_pais]
     Datos = pd.DataFrame(Datos)
+    dff = Datos.groupby([R5_Col_Dias]).sum().reset_index()
     Ejex = []
     Ejey = Datos[R5_Col_muertes]
     
-    Ejey = Ejey.replace(np.nan,0)
+    if tipo == 3:
+        Ejey = Ejey.replace("",0)
+    elif tipo == 2:
+        Ejey = Ejey.replace(np.nan,0)
+    elif tipo == 1:
+        Ejey = Ejey.replace(np.nan,0)
 
-    for i in Datos.index:
+    for i in dff.index:
         Ejex.append(i)
     
     #X = pd.to_datetime(Ejex).astype(np.int64)
@@ -447,7 +483,7 @@ def Reporte5():
     Y = np.asarray(Ejey)[:,np.newaxis]
     plt.scatter(Ejex,Y)
 
-    R5_Grado_Polinomio = 3
+    R5_Grado_Polinomio = 4
     Caracteristicas_Polinomio = PolynomialFeatures(degree=R5_Grado_Polinomio)
     Transform_x = Caracteristicas_Polinomio.fit_transform(X)
     modelo = linear_model.LinearRegression().fit(Transform_x,Ejey)
@@ -460,7 +496,7 @@ def Reporte5():
     x_nuevo_min = 0.0
     x_nuevo_max = R5_prediccion
 
-    x_nuevo = np.linspace(x_nuevo_min,0.0,50)
+    x_nuevo = np.linspace(x_nuevo_min,x_nuevo_max,50)
     x_nuevo = x_nuevo[:,np.newaxis]
 
     x_nuevo_transormado = Caracteristicas_Polinomio.fit_transform(x_nuevo)
@@ -525,8 +561,16 @@ def Reporte6():
     Ejex = Datos[R6_Col_dias]
     Ejey = Datos[R6_Col_muertes]
 
-    Ejex = Ejex.replace(np.nan,0)
-    Ejey = Ejey.replace(np.nan,0)
+    if tipo == 3:
+        Ejex = Ejex.replace("",0)
+        Ejey = Ejey.replace("",0)
+    elif tipo == 2:
+        Ejex = Ejex.replace(np.nan,0)
+        Ejey = Ejey.replace(np.nan,0)
+    elif tipo == 1:
+        Ejex = Ejex.replace(np.nan,0)
+        Ejey = Ejey.replace(np.nan,0)
+
     
     X = pd.to_datetime(Ejex).astype(np.int64)
     X = np.asarray(X)
@@ -592,7 +636,12 @@ def Reporte7():
     Ejex = []
     Ejey = Datos[R7_Col_Confirmados]
     
-    Ejey = Ejey.replace(np.nan,0)
+    if tipo == 3:
+        Ejey = Ejey.replace("",0)
+    elif tipo == 2:
+        Ejey = Ejey.replace(np.nan,0)
+    elif tipo == 1:        
+        Ejey = Ejey.replace(np.nan,0)
 
     for i in Datos.index:
         Ejex.append(i)
@@ -673,7 +722,12 @@ def Reporte8():
     Ejex = []
     Ejey = Datos[R8_col_confirmados]
 
-    Ejey = Ejey.replace(np.nan,0)
+    if tipo == 3:
+        Ejey = Ejey.replace("",0)
+    elif tipo == 2:
+        Ejey = Ejey.replace(np.nan,0)
+    elif tipo == 1:        
+        Ejey = Ejey.replace(np.nan,0)
 
     for i in Datos.index:
         Ejex.append(i)
@@ -763,8 +817,16 @@ def Reporte9():
 
     y = Datos[R9_col_vacunacion]
 
-    Ejex = Ejex.replace(np.nan,0)
-    y = y.replace(np.nan,0)
+    if tipo == 3:
+        Ejex = Ejex.replace("",0)
+        y = y.replace("",0)
+    elif tipo == 2:
+        Ejex = Ejex.replace(np.nan,0)
+        y = y.replace(np.nan,0)
+    elif tipo == 1:
+        Ejex = Ejex.replace(np.nan,0)
+        y = y.replace(np.nan,0)
+
 
     X = pd.to_datetime(Ejex).astype(np.int64)
     X = X[:,np.newaxis]
@@ -838,11 +900,21 @@ def Reporte10():
     Ejex2 = Datos2[R10_Col_Fecha]
     Ejey2 = Datos2[R10_Col_vacunacion]
 
-    Ejex = Ejex.replace(np.nan,0)
-    Ejey = Ejey.replace(np.nan,0)
-
-    Ejex2 = Ejex2.replace(np.nan,0)
-    Ejey2 = Ejey2.replace(np.nan,0)
+    if tipo == 3:
+        Ejex = Ejex.replace("",0)
+        Ejey = Ejey.replace("",0)
+        Ejex2 = Ejex2.replace("",0)
+        Ejey2 = Ejey2.replace("",0)
+    elif tipo == 2:
+        Ejex = Ejex.replace(np.nan,0)
+        Ejey = Ejey.replace(np.nan,0)
+        Ejex2 = Ejex2.replace(np.nan,0)
+        Ejey2 = Ejey2.replace(np.nan,0)
+    elif tipo == 1:
+        Ejex = Ejex.replace(np.nan,0)
+        Ejey = Ejey.replace(np.nan,0)
+        Ejex2 = Ejex2.replace(np.nan,0)
+        Ejey2 = Ejey2.replace(np.nan,0)
 
     X = pd.to_datetime(Ejex).astype(np.int64)
     X = X[:,np.newaxis]
@@ -931,8 +1003,15 @@ def Reporte11():
     Ejex = Datos[R11_col_genero]
     Ejey = Datos[R11_col_infectados]
 
-    Ejex = Ejex.replace(np.nan,0)
-    Ejey = Ejey.replace(np.nan,0)
+    if tipo == 3:
+        Ejex = Ejex.replace("",0)
+        Ejey = Ejey.replace("",0)
+    elif tipo == 2:
+        Ejex = Ejex.replace(np.nan,0)
+        Ejey = Ejey.replace(np.nan,0)
+    elif tipo == 1:
+        Ejex = Ejex.replace(np.nan,0)
+        Ejey = Ejey.replace(np.nan,0)
 
 
     Var1 = 0
@@ -1001,12 +1080,22 @@ def Reporte13():
 
     Ejex2 = Datos[R13_col_muertes]
     Ejey2 = Datos[R13_col_edad]
-    
-    Ejex = Ejex.replace(np.nan,0)
-    Ejey = Ejey.replace(np.nan,0)
 
-    Ejex2 = Ejex.replace(np.nan,0)
-    Ejey2 = Ejey.replace(np.nan,0)   
+    if tipo == 3:
+        Ejex = Ejex.replace("",0)
+        Ejey = Ejey.replace("",0)
+        Ejex2 = Ejex.replace("",0)
+        Ejey2 = Ejey.replace("",0)
+    elif tipo == 2:
+        Ejex = Ejex.replace(np.nan,0)
+        Ejey = Ejey.replace(np.nan,0)
+        Ejex2 = Ejex.replace(np.nan,0)
+        Ejey2 = Ejey.replace(np.nan,0)
+    elif tipo == 1:
+        Ejex = Ejex.replace(np.nan,0)
+        Ejey = Ejey.replace(np.nan,0)
+        Ejex2 = Ejex.replace(np.nan,0)
+        Ejey2 = Ejey.replace(np.nan,0)
 
     #X = pd.to_datetime(Ejex).astype(np.int64)
     X = Ejex[:,np.newaxis]
@@ -1100,8 +1189,15 @@ def Reporte14():
     Eje_x = []
     Ejey = Datos2[R14_col_muertes]
 
-    Ejex = Ejex.replace(np.nan,0)
-    Ejey = Ejey.replace(np.nan,0)
+    if tipo == 3:
+        Ejex = Ejex.replace("",0)
+        Ejey = Ejey.replace("",0)
+    elif tipo == 2:
+        Ejex = Ejex.replace(np.nan,0)
+        Ejey = Ejey.replace(np.nan,0)
+    elif tipo == 1:
+        Ejex = Ejex.replace(np.nan,0)
+        Ejey = Ejey.replace(np.nan,0)
 
     Ejex = np.asarray(Ejex)
     for i in Datos2.index:
@@ -1181,7 +1277,13 @@ def Reporte15():
     Ejey = Datos2[R15_col_infectados]
     Eje_x = []
     
-    Ejey = Ejey.replace(np.nan,0)
+    if tipo == 3:
+        Ejey = Ejey.replace("",0)
+        Ejey = np.float64(Ejey)        
+    elif tipo == 2:
+        Ejey = Ejey.replace(np.nan,0)
+    elif tipo == 1:
+        Ejey = Ejey.replace(np.nan,0)
 
     for i in Datos2.index:
         Eje_x.append(i)
@@ -1262,9 +1364,20 @@ def Reporte16():
         Datos = pd.DataFrame(Datos)
         Ejex = Datos[R16_col_muertes]
         Ejey = Datos[R16_col_casos]
+        Eje_y= []
 
-        Ejex = Ejex.replace(np.nan,0)
-        Ejey = Ejey.replace(np.nan,1)
+        if tipo == 3:
+            Ejex = Ejex.replace("",0)
+            Ejey = Ejey.replace("",1)
+            Ejex = np.float64(Ejex)
+            Ejey = np.float64(Ejey)
+        elif tipo == 2:
+            Ejex = Ejex.replace(np.nan,0)
+            Ejey = Ejey.replace(np.nan,1)
+        elif tipo == 1:
+            Ejex = Ejex.replace(np.nan,0)
+            Ejey = Ejey.replace(np.nan,1)
+            
         
         Prueba = (Ejex *100)/Ejey
         Y = Prueba[:,np.newaxis]
@@ -1298,8 +1411,17 @@ def Reporte16():
         Ejex = Datos[R16_col_muertes]
         Ejey = Datos[R16_col_casos]
 
-        Ejex = Ejex.replace(np.nan,0)
-        Ejey = Ejey.replace(np.nan,1)
+        if tipo == 3:
+            Ejex = Ejex.replace("",0)
+            Ejey = Ejey.replace("",1)
+            Ejey = np.float64(Ejey)
+            Ejex = np.float64(Ejex)
+        elif tipo == 2:
+            Ejex = Ejex.replace(np.nan,0)
+            Ejey = Ejey.replace(np.nan,1)
+        elif tipo == 1:
+            Ejex = Ejex.replace(np.nan,0)
+            Ejey = Ejey.replace(np.nan,0)
         
         Prueba = (Ejex *100)/Ejey
         Y = Prueba[:,np.newaxis]
@@ -1334,8 +1456,17 @@ def Reporte16():
         Ejex = Datos[R16_col_muertes]
         Ejey = Datos[R16_col_casos]
 
-        Ejex = Ejex.replace(np.nan,0)
-        Ejey = Ejey.replace(np.nan,1)
+        if tipo == 3:
+            Ejex = Ejex.replace("",0)
+            Ejey = Ejey.replace("",1)
+            Ejey = np.float64(Ejey)
+            Ejex = np.float64(Ejex)
+        elif tipo == 2:
+            Ejex = Ejex.replace(np.nan,0)
+            Ejey = Ejey.replace(np.nan,1)
+        elif tipo == 1:
+            Ejex = Ejex.replace(np.nan,0)
+            Ejey = Ejey.replace(np.nan,0)
         
         Prueba = (Ejex *100)/Ejey
         Y = Prueba[:,np.newaxis]
@@ -1364,7 +1495,6 @@ def Reporte16():
         plt.ylabel('Porcentaje Muertes')
         plt.savefig("Reporte16.png")
         plt.close()
-
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
@@ -1409,8 +1539,17 @@ def Reporte17():
     Ejex = Datos[R17_col_casos]
     Ejey = Datos[R17_col_muertes]
 
-    Ejex = Ejex.replace(np.nan,0)
-    Ejey = Ejey.replace(np.nan,0)
+    if tipo == 3:
+        Ejex = Ejex.replace("",0)
+        Ejey = Ejey.replace("",0)
+        Ejey = np.float64(Ejey)
+        Ejex = np.float64(Ejex)
+    elif tipo == 2:
+        Ejex = Ejex.replace(np.nan,0)
+        Ejey = Ejey.replace(np.nan,0)
+    elif tipo == 1:
+        Ejex = Ejex.replace(np.nan,0)
+        Ejey = Ejey.replace(np.nan,0)
     
     Ejex = Ejex[:,np.newaxis]
     Ejey = Ejey[:,np.newaxis]
@@ -1479,8 +1618,17 @@ def Reporte18():
     Ejey = Datos2[R18_col_infectados]
     Eje_x = []
     
-    Ejex = Ejex.replace(np.nan,0)
-    Ejey = Ejey.replace(np.nan,0)
+    if tipo == 3:
+        Ejex = Ejex.replace("",0)
+        Ejey = Ejey.replace("",0)
+        Ejey = np.float64(Ejey)
+        Ejex = np.float64(Ejex)
+    elif tipo == 2:
+        Ejex = Ejex.replace(np.nan,0)
+        Ejey = Ejey.replace(np.nan,0)
+    elif tipo == 1:
+        Ejex = Ejex.replace(np.nan,0)
+        Ejey = Ejey.replace(np.nan,0)
     
     for i in Datos2.index:
         Eje_x.append(i)
@@ -1551,7 +1699,13 @@ def Reporte19():
     Ejex = []
     Ejey = Datos[R19_col_muertes]
     
-    Ejey = Ejey.replace(np.nan,0)
+    if tipo == 3:
+        Ejey = Ejey.replace("",0)
+        Ejey = np.float64(Ejey)        
+    elif tipo == 2:
+        Ejey = Ejey.replace(np.nan,0)
+    elif tipo == 1:
+        Ejey = Ejey.replace(np.nan,0)
 
     for i in Datos.index:
         Ejex.append(i)
@@ -1635,8 +1789,17 @@ def Reporte20():
     Ejex = Datos[R20_col_casos]
     Ejey = Datos[R20_col_diarios]
 
-    Ejex = Ejex.replace(np.nan,1)
-    Ejey = Ejey.replace(np.nan,0)
+    if tipo == 3:
+        Ejex = Ejex.replace("",1)
+        Ejey = Ejey.replace("",0)
+        Ejey = np.float64(Ejey)
+        Ejex = np.float64(Ejex)
+    elif tipo == 2:
+        Ejex = Ejex.replace(np.nan,1)
+        Ejey = Ejey.replace(np.nan,0)
+    elif tipo == 1:
+        Ejex = Ejex.replace(np.nan,1)
+        Ejey = Ejey.replace(np.nan,0)
 
     Resultado = Ejey / Ejex * 100
 
@@ -1655,8 +1818,14 @@ def Reporte20():
     Ejex = Datos[R20_col_casos]
     Ejey = Datos[R20_col_muertes]
 
-    Ejex = Ejex.replace(np.nan,1)
-    Ejey = Ejey.replace(np.nan,0)
+    if tipo == 3:
+        Ejex = Ejex.replace("",1)
+        Ejey = Ejey.replace("",0)
+        Ejey = np.float64(Ejey)
+        Ejex = np.float64(Ejex)
+    elif tipo == 2:
+        Ejex = Ejex.replace(np.nan,1)
+        Ejey = Ejey.replace(np.nan,0)
 
     Resultado = Ejey / Ejex * 100
     tasa2 = str(round(Resultado.mean(),2))
@@ -1717,7 +1886,16 @@ def Reporte21():
     Ejex = []
     Ejey = Datos[R21_col_muertes]
     
-    Ejey = Ejey.replace(np.nan,0)
+    
+    if tipo == 3:
+        Ejey = Ejey.replace("",0)
+        Ejey = np.float64(Ejey)
+        Ejey = np.asarray(Ejey)     
+    elif tipo == 2:
+        Ejey = Ejey.replace(np.nan,0)
+    elif tipo == 1:
+        Ejey = Ejey.replace(np.nan,0)
+    
 
     for i in Datos.index:
         Ejex.append(i)
@@ -1765,7 +1943,14 @@ def Reporte21():
     Ejex = []
     Ejey = Datos[R21_col_casos]
     
-    Ejey = Ejey.replace(np.nan,0)
+    if tipo == 3:
+        Ejey = Ejey.replace("",0)
+        Ejey = np.float64(Ejey)
+        Ejey = np.asarray(Ejey)     
+    elif tipo == 2:
+        Ejey = Ejey.replace(np.nan,0)
+    elif tipo == 1:
+        Ejey = Ejey.replace(np.nan,0)
 
     for i in Datos.index:
         Ejex.append(i)
@@ -1857,7 +2042,13 @@ def Reporte22():
     Ejex = []
     Ejey = Datos[R22_col_muertes]
     
-    Ejey = Ejey.replace(np.nan,0)
+    if tipo == 3:
+        Ejey = Ejey.replace("",0)
+        Ejey = np.float64(Ejey)
+    elif tipo == 2:
+        Ejey = Ejey.replace(np.nan,0)
+    elif tipo == 1:        
+        Ejey = Ejey.replace(np.nan,0)
 
     for i in Datos.index:
         Ejex.append(i)
@@ -1925,8 +2116,15 @@ def Reporte23():
     Eje_x = []
     Ejey = Datos[R23_col_muertes]
 
-    Ejex = Ejex.replace(np.nan,0)
-    Ejey = Ejey.replace(np.nan,0)
+    if tipo == 3:
+        Ejex = Ejex.replace("",0)
+        Ejey = Ejey.replace("",0)
+    elif tipo == 2:
+        Ejex = Ejex.replace(np.nan,0)
+        Ejey = Ejey.replace(np.nan,0)
+    elif tipo == 1:
+        Ejex = Ejex.replace(np.nan,0)
+        Ejey = Ejey.replace(np.nan,0)
 
     Ejex = np.asarray(Ejex)
     for i in Datos.index:
@@ -2006,7 +2204,14 @@ def Reporte24():
     Ejex = []
     Ejey = Datos[R24_col_casos]
     
-    Ejey = Ejey.replace(np.nan,0)
+    if tipo == 3:
+        Ejey = Ejey.replace("",0)
+        Ejey = np.float64(Ejey)
+        Ejey = np.asarray(Ejey)
+    elif tipo == 2:
+        Ejey = Ejey.replace(np.nan,0)
+    elif tipo == 1:
+        Ejey = Ejey.replace(np.nan,0)
 
     for i in Datos.index:
         Ejex.append(i)
@@ -2038,7 +2243,14 @@ def Reporte24():
     Ejex = []
     Ejey = Datos[R24_col_cantpruebas]
 
-    Ejey = Ejey.replace(np.nan,0)
+    if tipo == 3:
+        Ejey = Ejey.replace("",0)
+        Ejey = np.float64(Ejey)
+        Ejey = np.asarray(Ejey)
+    elif tipo == 2:
+        Ejey = Ejey.replace(np.nan,0)
+    elif tipo == 1:
+        Ejey = Ejey.replace(np.nan,0)
 
     for i in Datos.index:
         Ejex.append(i)
@@ -2104,7 +2316,13 @@ def Reporte25():
     Ejex = []
     Ejey = Datos[R25_col_casos]
     
-    Ejey = Ejey.replace(np.nan,0)
+    if tipo == 3:
+        Ejey = Ejey.replace("",0)
+        Ejey = np.float64(Ejey)        
+    elif tipo == 2:
+        Ejey = Ejey.replace(np.nan,0)
+    elif tipo == 1:        
+        Ejey = Ejey.replace(np.nan,0)
 
     for i in Datos.index:
         Ejex.append(i)
@@ -2147,6 +2365,7 @@ def Reporte25():
     plt.xlabel('x')
     plt.ylabel('y')
     plt.savefig("Reporte25.png")
+    plt.close()
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
@@ -2163,7 +2382,7 @@ def Carga():
     elif extension[1] == ".xlsx":
         dataset = pd.read_excel(Archivo)
         tipo = 2
-    elif extension[1] == ".json":
+    elif extension[1] == ".json":        
         dataset = pd.read_json(Archivo)
         tipo = 3
     
