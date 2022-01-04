@@ -36,7 +36,7 @@ class Reporte20 extends React.Component {
                 body: JSON.stringify(this.state.form)
 
             }
-            let res = await fetch('http://localhost:4000/Reporte20', config)
+            let res = await fetch('http://3.16.160.225:4000/Reporte20', config)
             let json = await res.json()
             console.log(json)
 

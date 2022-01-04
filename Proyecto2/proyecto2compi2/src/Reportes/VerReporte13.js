@@ -13,7 +13,7 @@ class VerReporte13 extends React.Component {
     }
 
     async componentDidMount() {
-        const res = await fetch(`http://localhost:4000/GetReporte13`)
+        const res = await fetch(`http://3.16.160.225:4000/GetReporte13`)
         const data = await res.json();
         this.setState({ prueba: data })
         console.log(data);

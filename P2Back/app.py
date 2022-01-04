@@ -880,28 +880,47 @@ def getReporte11():
 
 @app.route('/Reporte11', methods = ['POST'])
 def Reporte11():
-    global R11_pais, R11_col_pais, R11_col_infectados, R11_col_genero, R11_col_fecha, R11_Formula, R11_r2, R11_rmse, R11_m, R11_b
+    global R11_pais, R11_col_pais,R11_Genero, R11_col_infectados, R11_col_genero, R11_col_fecha, R11_Formula, R11_r2, R11_rmse, R11_m, R11_b
     VariablesParamR11 = {
         "Variable1":request.json['Variable1'],
         "Variable2":request.json['Variable2'],
         "Variable3":request.json['Variable3'],
         "Variable4":request.json['Variable4'],
-        "Variable5":request.json['Variable5']
+        "Variable5":request.json['Variable5'],
+        "Variable6":request.json['Variable6']
     }
     regr = linear_model.LinearRegression()
     R11_pais = VariablesParamR11['Variable1']
     R11_col_pais = VariablesParamR11['Variable2']
     R11_col_infectados = VariablesParamR11['Variable3']
     R11_col_genero = VariablesParamR11['Variable4']
-    R11_col_fecha = VariablesParamR11['Variable5']
+    R11_Genero = VariablesParamR11['Variable5']
+    R11_col_fecha = VariablesParamR11['Variable6']
+
 
     Datos = dataset.loc[dataset[R11_col_pais]==R11_pais]
     Datos = pd.DataFrame(Datos)
-    Ejex = Datos[R11_col_genero]
-    Ejey = Datos[R11_col_infectados]
-    Fechas = Datos[R11_col_fecha]
-    
-    Prueba = (Ejex *100)/Ejey
+
+    var1 = Datos[R11_col_genero]
+
+    Datos2 = Datos.loc[Datos[R11_col_genero]==R11_Genero]
+    Datos2 = pd.DataFrame(Datos2)
+
+    Ejex = Datos2[R11_col_genero]
+    Ejey = Datos2[R11_col_infectados]
+    Fechas = Datos2[R11_col_fecha]
+
+    var2 = []
+    #Prueba = (Ejex *100)/Ejey
+    for i in Ejex.index:
+        var2.append(i)
+
+    resultado = []
+
+    for i in range(len(var2)):
+        resultado = var2[i]/var1.size
+    print(resultado)
+    '''
     Y = Prueba[:,np.newaxis]
 
     Eje_Xf = pd.to_datetime(Fechas).astype(np.int64)
@@ -932,7 +951,7 @@ def Reporte11():
     plt.ylabel('y')
     plt.savefig("Reporte11.png")
     plt.close()
-
+    '''
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 

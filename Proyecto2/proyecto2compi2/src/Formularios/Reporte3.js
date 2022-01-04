@@ -34,7 +34,7 @@ class Reporte3 extends React.Component {
                 body: JSON.stringify(this.state.form)
 
             }
-            let res = await fetch('http://localhost:4000/Reporte3', config)
+            let res = await fetch('http://3.16.160.225:4000/Reporte3', config)
             let json = await res.json()
             console.log(json)
 
@@ -49,7 +49,7 @@ class Reporte3 extends React.Component {
             <div>
                 <NavegacionInit />
                 <div className="main-container col-12">
-                    <h1>Parametros Reporte No.1</h1>
+                    <h1>Parametros Reporte No.3</h1>
                     <Form onSubmit={this.handleSubmit}>
                         <Form.Group controlId="formUsename">
                             <Form.Label>Ingrese columna de casos</Form.Label>
