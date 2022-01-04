@@ -8,6 +8,7 @@ import Reporte14 from "../Formularios/Reporte14";
 import Reporte15 from "../Formularios/Reporte15";
 import Reporte16 from "../Formularios/Reporte16";
 import Reporte17 from "../Formularios/Reporte17";
+import Reporte18 from "../Formularios/Reporte18";
 import Reporte19 from "../Formularios/Reporte19";
 import Reporte2 from "../Formularios/Reporte2";
 import Reporte20 from "../Formularios/Reporte20";
@@ -31,6 +32,7 @@ import VerReporte14 from "../Reportes/VerReporte14";
 import VerReporte15 from "../Reportes/VerReporte15";
 import VerReporte16 from "../Reportes/VerReporte16";
 import VerReporte17 from "../Reportes/VerReporte17";
+import VerReporte18 from "../Reportes/VerReporte18";
 import VerReporte19 from "../Reportes/VerReporte19";
 import VerReporte2 from "../Reportes/VerReporte2";
 import VerReporte20 from "../Reportes/VerReporte20";
@@ -106,6 +108,8 @@ const Main =()=>{
             <Route path ="/VerReporte/16" component={()=><VerReporte16/>}/>
             <Route path ="/ParamReporte/17" component={()=><Reporte17/>}/>
             <Route path ="/VerReporte/17" component={()=><VerReporte17/>}/>
+            <Route path ="/ParamReporte/18" component={()=><Reporte18/>}/>
+            <Route path ="/VerReporte/18" component={()=><VerReporte18/>}/>
             <Route path ="/ParamReporte/19" component={()=><Reporte19/>}/>
             <Route path ="/VerReporte/19" component={()=><VerReporte19/>}/>
             <Route path ="/ParamReporte/20" component={()=><Reporte20/>}/>

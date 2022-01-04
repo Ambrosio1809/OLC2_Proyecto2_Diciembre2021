@@ -100,15 +100,14 @@ def Reporte1():
 
         R1_rmse = np.sqrt(mean_squared_error(Y,nueva_y))
         R1_Coeficiente = modelo.coef_[0]
-        print(R1_Coeficiente)
         R1_r2 = r2_score(Y,nueva_y)
-        print('RMSE: ', R1_rmse)
-        print('R2: ', R1_r2)
 
         plt.plot(Ejex, Y, color='coral', linewidth=3)
         plt.grid()
         Titulo = 'Grado = {}; RMSE = {}; R2 = {}'.format(R1_Grado_Polinomio, round(R1_rmse,2), round(R1_r2,2))
         plt.title("Tendencia de la Infeccion por Covid-19 en un país\n " + Titulo, fontsize=10)
+        plt.xlabel("Dias")
+        plt.ylabel("Casos")
         plt.savefig("Reporte1.png")
         plt.close()
     else:
@@ -137,6 +136,8 @@ def Reporte1():
         plt.grid()
         Titulo = 'Grado = {}; RMSE = {}; R2 = {}'.format(R1_Grado_Polinomio, round(R1_rmse,2), round(R1_r2,2))
         plt.title("Tendencia de la Infeccion por Covid-19 en un país\n " + Titulo, fontsize=10)
+        plt.xlabel("Dias")
+        plt.ylabel("Casos")
         plt.savefig("Reporte1.png")
         plt.close()
 
@@ -611,6 +612,8 @@ def Reporte7():
 
     Titulo = 'Grado = {}; RMSE = {}; R2 = {} \n Con una prediccion para: {} dias de = {} Infectados'.format(R7_Grado_Polinomio, round(R7_rmse,2), round(R7_r2,2), R7_Cant_Dias,round(R7_pred,2))
     plt.title("Tendencia del número de infectados por día de un País.\n " + Titulo, fontsize=10)
+    plt.xlabel("Dias")
+    plt.ylabel("Infectados")
     plt.savefig("Reporte7.png")
     plt.close()
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
@@ -668,7 +671,6 @@ def Reporte8():
     
     R8_rmse = np.sqrt(mean_squared_error(Ejey,nueva_y))
     R8_Coeficiente = modelo.coef_
-    print(R8_Coeficiente)
     R8_r2 = r2_score(Ejey,nueva_y)
     
     x_nuevo_min = 0.0
@@ -861,26 +863,23 @@ def Reporte10():
 
 @app.route('/GetReporte11', methods=['GET'])
 def getReporte11():
-    if R11_m[0] > 1:
-        conclusion = 'Dado a que la pendiente de nuestra ecuacion mayor a 1, podemos concluir\nque el porcentaje de hombres infectados crecera demasiado rapido conforme al tiempo\npase, por lo cual la pandemia sera un riesgo para la poblacion'
-    elif R11_m[0]< 1 or R11_m[0] > 0 :
-        conclusion = 'Dado a que la pendiente se encuentra en un valor entre 0 y 1, nos indica\nque el porcentaje seguira creciendo pero a un nivel mas constante, no tan rapido\ncomo si lo fuese mayor a 1, por lo cual puede ser posible que la pandemia se haya\ncontrolado un poco'
-    elif R11_m[0] < 0:
-        conclusion = 'Dado a que la pendiente es menor a 0, en este caso negativa, podemos\nconcluir que conforme el tiempo transcurra la pandemia ira disminuyendo hasta que ya\nno exista más, por lo cual ya no se tendrán hombres infectados'
+    if Porcentaje > 75.0:
+        conclusion = 'Dado que el porcentaje obtenido es mayor al 75% podemos concluir que para\neste país los hombres presentan un alto porcentaje de infección, dando como resultado\nque las mujeres solo tienen aproximadamente el 25°/. de infeccion'
+    elif Porcentaje< 75.0 or Porcentaje > 35.0 :
+        conclusion = 'Dado que el porcentaje obtenido es menor al 75% podemos concluir que para\neste país los hombres presentan un alto porcentaje de infección medio,lo cual hace\nque las mujeres tengan un porcentaje medio de infeccion'
+    elif Porcentaje < 35.0:
+        conclusion = 'Se puede concluir que los hombres parece ser mas resistente a la infección,\npor lo cual su porcentaje no es muy elevado comparado con el de las mujeres'
     with open ("Reporte11.png","rb") as imagen:
         cadenaBase64 = base64.b64encode(imagen.read())
     return jsonify({"imagen":cadenaBase64.decode('utf-8'),
                     "pais":R11_pais,
-                    "formula": R11_Formula, 
-                    "RMSE":round(R11_rmse,4),
-                    "R2": round(R11_r2,4),
-                    "coef": R11_m[0],
-                    "intercept": round(R11_b[0],2),
+                    "genero": R11_Genero, 
+                    "porcentaje": Porcentaje,
                     "Conclusion": conclusion})
 
 @app.route('/Reporte11', methods = ['POST'])
 def Reporte11():
-    global R11_pais, R11_col_pais,R11_Genero, R11_col_infectados, R11_col_genero, R11_col_fecha, R11_Formula, R11_r2, R11_rmse, R11_m, R11_b
+    global R11_pais, R11_col_pais,R11_Genero, R11_col_infectados, R11_col_genero, R11_col_fecha, R11_Formula, R11_r2, R11_rmse, R11_m, R11_b, Porcentaje
     VariablesParamR11 = {
         "Variable1":request.json['Variable1'],
         "Variable2":request.json['Variable2'],
@@ -901,57 +900,33 @@ def Reporte11():
     Datos = dataset.loc[dataset[R11_col_pais]==R11_pais]
     Datos = pd.DataFrame(Datos)
 
-    var1 = Datos[R11_col_genero]
+    Ejex = Datos[R11_col_fecha]
+    Ejey = Datos[R11_col_infectados]
 
     Datos2 = Datos.loc[Datos[R11_col_genero]==R11_Genero]
     Datos2 = pd.DataFrame(Datos2)
 
-    Ejex = Datos2[R11_col_genero]
-    Ejey = Datos2[R11_col_infectados]
-    Fechas = Datos2[R11_col_fecha]
+    Ejex_g = Datos2[R11_col_fecha]
+    Ejey_g = Datos2[R11_col_infectados]
 
-    var2 = []
-    #Prueba = (Ejex *100)/Ejey
-    for i in Ejex.index:
-        var2.append(i)
+    Var1 = 0
 
-    resultado = []
+    for i in Ejey_g:
+        Var1 = Var1+1
+    
+    Porcentaje = (Var1 / Ejey.size) *100
 
-    for i in range(len(var2)):
-        resultado = var2[i]/var1.size
-    print(resultado)
-    '''
-    Y = Prueba[:,np.newaxis]
+    print(Porcentaje)
 
-    Eje_Xf = pd.to_datetime(Fechas).astype(np.int64)
-    Eje_Xf = Eje_Xf[:,np.newaxis]
+    plt.scatter(Ejex,Ejey)
+    plt.plot(Ejex_g, Ejey_g)    
 
-    for i in range(len(Y)):
-        if np.isnan(Y[i]):
-            Y[i] = 0.0
- 
-    regr.fit(Eje_Xf,Y)
-    R11_coef = regr.coef_
-    R11_m = regr.coef_[0]
-    R11_b = regr.intercept_
-    R11_y_p = regr.predict(Eje_Xf)
-
-    print(R11_m[0])
-    print(R11_b[0])
-
-    plt.scatter(Eje_Xf,Y,color = 'black')
-    plt.plot(Eje_Xf,R11_y_p, color = 'blue')
-    R11_Formula = 'y={0}*x+{1}'.format(R11_m[0], R11_b[0])
-    R11_r2 = r2_score(Y,R11_y_p)
-    R11_rmse = np.sqrt(mean_squared_error(Y,R11_y_p))
-
-    Titulo = 'Formula : {}; \n coeficiente: {} RMSE = {}; R2 = {}'.format(R11_Formula, R11_coef, round(R11_rmse,4), round(R11_r2,4))
+    Titulo = '{} %'.format(Porcentaje)
     plt.title("Porcentaje de hombres infectados por covid-19 en un País desde el primer caso activo.\n " + Titulo, fontsize=10)
-    plt.xlabel('x')
-    plt.ylabel('y')
+    plt.xlabel('Dias')
+    plt.ylabel('Infectados')
     plt.savefig("Reporte11.png")
     plt.close()
-    '''
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
@@ -1065,36 +1040,43 @@ def getReporte14():
                     "grado": R14_Grado_Polinomio, 
                     "RMSE":round(R14_rmse,4),
                     "R2": round(R14_r2,4),
+                    "region":R14_region,
                     "Conclusion":conclusion})
 
 @app.route('/Reporte14', methods = ['POST'])
 def Reporte14():
-    global R14_pais, R14_col_pais, R14_col_region, R14_col_muertes, R14_Grado_Polinomio, R14_rmse, R14_r2, R14_Coeficiente
+    global R14_pais, R14_col_pais, R14_col_region, R14_col_muertes, R14_Grado_Polinomio, R14_rmse, R14_r2, R14_Coeficiente, R14_region
     VariablesParamR14 = {
         "Variable1":request.json['Variable1'],
         "Variable2":request.json['Variable2'],
         "Variable3":request.json['Variable3'],
-        "Variable4":request.json['Variable4']
+        "Variable4":request.json['Variable4'],
+        "Variable5":request.json['Variable5']
     }
 
     R14_pais = VariablesParamR14['Variable1']
     R14_col_pais = VariablesParamR14['Variable2']
     R14_col_region = VariablesParamR14['Variable3']
-    R14_col_muertes = VariablesParamR14['Variable4']
-
+    R14_region = VariablesParamR14['Variable4']
+    R14_col_muertes = VariablesParamR14['Variable5']
+    
     Datos = dataset.loc[dataset[R14_col_pais]==R14_pais]
     Datos = pd.DataFrame(Datos)
-    Ejex = Datos[R14_col_region]
+    
+    Datos2 = Datos.loc[Datos[R14_col_region]==R14_region]
+    Datos2 = pd.DataFrame(Datos2)
+
+    Ejex = Datos2[R14_col_region]
     Eje_x = []
-    Ejey = Datos[R14_col_muertes]
+    Ejey = Datos2[R14_col_muertes]
 
     Ejex = np.asarray(Ejex)
-    for i in Datos.index:
+    for i in Datos2.index:
         Eje_x.append(i)
     
     X = np.asarray(Eje_x)
 
-    plt.xticks(X, Ejex)
+    #plt.xticks(X, Ejex)
     X = X[:,np.newaxis]
     Y = Ejey[:,np.newaxis]
 
@@ -1115,9 +1097,10 @@ def Reporte14():
     plt.grid()
     Titulo = 'Pais: {} \n Grado = {}; RMSE = {}; R2 = {}'.format(R14_pais, R14_Grado_Polinomio, round(R14_rmse,2), round(R14_r2,2))
     plt.title("Muertes según regiones de un país - Covid 19.\n " + Titulo, fontsize=10)
+    plt.xlabel('Regiones')
+    plt.ylabel('Muertes')
     plt.savefig("Reporte14.png")
     plt.close()
-    
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
@@ -1402,8 +1385,78 @@ def Reporte17():
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 
+@app.route('/GetReporte18', methods=['GET'])
+def getReporte18():
+    if R18_Coeficiente[3] >0:
+        conclusion = 'Con el modelo generado y sus resultados se puede concluir que el comportamiento\nde los casos confirmados en este municipio, seguirá en aumento mientras que la\npandemia no sea controlada'
+    else:
+        conclusion = 'Con el modelo generado y sus resultados se puede concluir que el comportamiento\nde los casos confirmados en este municipio, seguirá en disminucion ya que la\npandemia ha sido controlada'
+    with open ("Reporte18.png","rb") as imagen:
+        cadenaBase64 = base64.b64encode(imagen.read())    
+    return jsonify({"imagen":cadenaBase64.decode('utf-8'),
+                    "pais":R18_pais,
+                    "Municipio":R18_Municipio,
+                    "grado": R18_Grado_Polinomio, 
+                    "RMSE":round(R18_rmse,4),
+                    "R2": round(R18_r2,4),
+                    "Conclusion":conclusion})
+
 @app.route('/Reporte18', methods =['POST'])
 def Reporte18():
+    global R18_pais, R18_Municipio, R18_col_pais, R18_col_municipio, R18_col_infectados,R18_col_dias,R18_Grado_Polinomio, R18_rmse, R18_r2, R18_Coeficiente
+    VariablesParamR18 = {
+        "Variable1":request.json['Variable1'],
+        "Variable2":request.json['Variable2'],
+        "Variable3":request.json['Variable3'],
+        "Variable4":request.json['Variable4'],
+        "Variable5":request.json['Variable5'],
+        "Variable6":request.json['Variable6']
+    }
+
+    R18_pais = VariablesParamR18['Variable1']
+    R18_col_pais = VariablesParamR18['Variable2']
+    R18_Municipio = VariablesParamR18['Variable3']
+    R18_col_municipio = VariablesParamR18['Variable4']
+    R18_col_infectados = VariablesParamR18['Variable5']
+    R18_col_dias = VariablesParamR18['Variable6']
+
+    Datos = dataset.loc[dataset[R18_col_pais]==R18_pais]
+    Datos = pd.DataFrame(Datos)
+
+    Datos2 = Datos.loc[Datos[R18_col_municipio]==R18_Municipio]
+    Datos2 = pd.DataFrame(Datos2)
+
+    Ejex = Datos2[R18_col_dias]
+    Ejey = Datos2[R18_col_infectados]
+
+    print(Ejex)
+    print(Ejey)
+    X = pd.to_datetime(Ejex).astype(np.int64)
+    X = np.asarray(Ejex)
+    X = X[:,np.newaxis]
+    Y = np.asarray(Ejey)[:,np.newaxis]    
+
+    plt.scatter(X,Y)
+    
+    R18_Grado_Polinomio = 3
+    Caracteristicas_Polinomio = PolynomialFeatures(degree=R18_Grado_Polinomio)
+    Transform_x = Caracteristicas_Polinomio.fit_transform(X)
+    modelo = linear_model.LinearRegression().fit(Transform_x,Y)
+    
+    nueva_y = modelo.predict(Transform_x)
+    R18_rmse = np.sqrt(mean_squared_error(Y,nueva_y))
+    R18_Coeficiente = modelo.coef_[0]
+    R18_r2 = r2_score(Y,nueva_y)
+
+    if np.isnan(R18_r2):
+        R18_r2 = 0
+    
+    plt.plot(X, Y, color='coral', linewidth=3)
+    plt.grid()
+    Titulo = 'Pais: {} \n Departamento: {} \n Grado = {}; RMSE = {}; R2 = {}'.format(R18_pais,R18_Municipio, R18_Grado_Polinomio, round(R18_rmse,2), round(R18_r2,2))
+    plt.title("Comportamiento y clasificación de personas infectadas por COVID-19 por municipio en un país\n " + Titulo, fontsize=10)
+    plt.savefig("Reporte18.png")
+    plt.close()
 
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
@@ -1800,12 +1853,13 @@ def Reporte23():
 
     Datos = dataset.loc[dataset[R23_col_pais]==R23_pais]
     Datos = pd.DataFrame(Datos)
-    Ejex = Datos[R23_col_factores]
+    Resultado = Datos.groupby([R23_col_factores]).sum().reset_index()
+    Ejex = Resultado[R23_col_factores]
     Eje_x = []
-    Ejey = Datos[R23_col_muertes]
+    Ejey = Resultado[R23_col_muertes]
 
     Ejex = np.asarray(Ejex)
-    for i in Datos.index:
+    for i in Resultado.index:
         Eje_x.append(i)
     
     X = np.asarray(Eje_x)
@@ -1824,16 +1878,17 @@ def Reporte23():
 
     R23_rmse = np.sqrt(mean_squared_error(Y,nueva_y))
     R23_Coeficiente = modelo.coef_[0]
-    print(R23_Coeficiente)
     R23_r2 = r2_score(Y,nueva_y)
 
     plt.plot(X, Y, color='coral', linewidth=3)
     plt.grid()
     Titulo = 'Pais: {} \n Grado = {}; RMSE = {}; R2 = {}'.format(R23_pais, R23_Grado_Polinomio, round(R23_rmse,2), round(R23_r2,2))
     plt.title("Factores de muerte por COVID-19 en un país.\n " + Titulo, fontsize=10)
+    plt.xlabel("Factores")
+    plt.ylabel("Muertes")
     plt.savefig("Reporte23.png")
     plt.close()
-
+    
     respuesta = jsonify({"message":"variables recibidas","Ver":"Ya puede visualizar el reporte en la seccion de reportes"})
     return respuesta
 

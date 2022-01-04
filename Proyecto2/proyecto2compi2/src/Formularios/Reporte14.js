@@ -10,6 +10,7 @@ class Reporte14 extends React.Component {
             Variable2: '',
             Variable3: '',
             Variable4: '',
+            Variable5: ''
         }
     }
 
@@ -66,8 +67,12 @@ class Reporte14 extends React.Component {
                             <Form.Control type="text" name="Variable3" placeholder="Columna_Regiones" onChange={this.handleChange} value={this.state.form.Variable3} />
                         </Form.Group>
                         <Form.Group controlId="formUsename">
+                            <Form.Label>Ingrese Nombre Regiones</Form.Label>
+                            <Form.Control type="text" name="Variable4" placeholder="Columna_Regiones" onChange={this.handleChange} value={this.state.form.Variable4} />
+                        </Form.Group>
+                        <Form.Group controlId="formUsename">
                             <Form.Label>Ingrese Nombre Columna Para Muertes</Form.Label>
-                            <Form.Control type="text" name="Variable4" placeholder="Columna_muertes" onChange={this.handleChange} value={this.state.form.Variable4} />
+                            <Form.Control type="text" name="Variable5" placeholder="Columna_muertes" onChange={this.handleChange} value={this.state.form.Variable5} />
                         </Form.Group>
                         <Button variant="primary" type="submit" onSubmit={this.handleSubmit}>
                             Visualizar

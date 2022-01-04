@@ -5,7 +5,7 @@ import NavegacionInit from '../components/Navbar';
 import {Button } from 'react-bootstrap';
 import {jsPDF} from 'jspdf'
 
-class VerReporte11 extends React.Component {
+class VerReporte18 extends React.Component {
 
     state = {
         prueba: [],
@@ -13,7 +13,7 @@ class VerReporte11 extends React.Component {
     }
 
     async componentDidMount() {
-        const res = await fetch(`http://3.16.160.225:4000/GetReporte11`)
+        const res = await fetch(`http://3.16.160.225:4000/GetReporte18`)
         const data = await res.json();
         this.setState({ prueba: data })
         console.log(data);
@@ -23,17 +23,17 @@ class VerReporte11 extends React.Component {
         e.preventDefault()
         var doc = new jsPDF('p', 'pt');
         doc.setFont('Arial', 'normal')
-        doc.text(250,35, "Reporte No. 11")
-        doc.text(45,60, `Porcentaje de hombres infectados por covid-19 en ${this.state.prueba.pais} desde\nel primer caso activo`)
+        doc.text(250,35, "Reporte No. 18")
+        doc.text(75,60, `Comportamiento y clasificación de personas infectadas por Covid-19 en\n${this.state.prueba.Municipio}, municipio de ${this.state.prueba.pais}`)
         doc.setFontSize('15')
-        doc.text(45,95,`A continuación se presenta el Porcentaje de hombres infectados por covid-19 en\n${this.state.prueba.pais} desde el primer caso activo En el cual podemos observar que los hombres\npresentan un porcentaje de ${this.state.prueba.porcentaje}% lo cual nos puede dar una breve descripción de como se\ncomporta el genero masculino frente a la infección por covid 19`) 
-        doc.addImage(`data:image/png;base64,${this.state.prueba.imagen}`,'PNG',50,200,500,500)
+        doc.text(100,115,`se realizó con una regresión polinomial de grado ${this.state.prueba.grado}\nCon un error cuadratico (RMSE) medio de : ${this.state.prueba.RMSE}\ny un porcentaje de variación (R2) de: ${this.state.prueba.R2}`) 
+        doc.addImage(`data:image/png;base64,${this.state.prueba.imagen}`,'PNG',50,175,500,500)
         doc.setFontSize('15')
-        doc.text(35,715,`Conclusión: ${this.state.prueba.Conclusion}`)
+        doc.text(35,690,`Conclusión: ${this.state.prueba.Conclusion}`)
         doc.setFontSize('16')
         doc.text(35,805,"Organizacion de Lenguajes y Compiladores 2")
         doc.text(35,825,"Fernando Alberto Ambrosio Alemán                                                    201404106")
-        doc.save("Reporte11.pdf")
+        doc.save("Reporte18.pdf")
     }
     
     render() {
@@ -42,8 +42,8 @@ class VerReporte11 extends React.Component {
             <div>
                 <NavegacionInit />
                 <div className="main-container col-12">
-                    <h1>Reporte No.11</h1>
-                    <h3>Porcentaje de hombres infectados por covid-19 en un País desde el primer caso activo</h3>
+                    <h1>Reporte No.18</h1>
+                    <h3>Comportamiento y clasificación de personas infectadas por Covid-19 en municipio de un pais</h3>
                     <Button variant="primary" onClick={this.handleSubmit}>
                             Download
                     </Button>
@@ -51,9 +51,10 @@ class VerReporte11 extends React.Component {
                         <tbody align="center">
                             <tr>
                                 <td>
-                                    A continuación se presenta el Porcentaje de hombres infectados por covid-19 en {this.state.prueba.pais} desde el primer caso activo<br></br>
-                                    En el cual podemos observar que los hombres presentan un porcentaje de {this.state.prueba.porcentaje} lo cual nos puede dar una breve <br></br>
-                                    descripción de como se comporta el genero masculino frente a la infección por covid 19
+                                    A continuación se presentan la Tendencia de casos confirmados de Coronavirus en el municipio de: {this.state.prueba.Municipio}<br></br>                                    
+                                    El cual se realizó con una regresión polinomial de grado {this.state.prueba.grado}<br></br>
+                                    Con un error cuadratico (RMSE) medio de : {this.state.prueba.RMSE}<br></br>
+                                    y un porcentaje de variación (R2) de: {this.state.prueba.R2}<br></br>
 
                                 </td>
                             </tr>
@@ -88,4 +89,4 @@ class VerReporte11 extends React.Component {
     }
 
 }
-export default VerReporte11;
+export default VerReporte18;

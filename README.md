@@ -140,7 +140,7 @@ Características básicas
 
 </p>
 
-<img src="./Imagenes/Flujo.PNG"></img>
+<img src="./Imagenes/flujo.PNG"></img>
 
 ##### Aplicación
 <p align = "justify">Se muestra la pantalla principal de la aplicación, se observan las acciones que se pueden realizar en la barra de menu principal en la parte superior
